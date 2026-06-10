@@ -15,7 +15,7 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
   },
   EM_REUNIAO: {
     label: "EM REUNIÃO",
-    className: "bg-red-100 text-red-500",
+    className: "bg-red-100 text-red-700",
   },
 };
 

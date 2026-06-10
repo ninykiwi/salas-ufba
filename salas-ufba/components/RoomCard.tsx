@@ -25,15 +25,15 @@ interface RoomCardProps {
 
 const currentEventStyles: Record< "OCUPADA" | "EM_REUNIAO", { wrapper: string; label: string; labelText: string; titleColor: string; borderColor: string } > = {
   OCUPADA: {
-    wrapper: "bg-blue-50",
-    label: "text-blue-500",
+    wrapper: "bg-[blue-50]",
+    label: "text-[#000666]",
     labelText: "ACONTECENDO AGORA",
-    titleColor: "text-blue-900",
-    borderColor: "border-l-4 border-blue-400",
+    titleColor: "text-[#000666]",
+    borderColor: "border-l-4 border-[#000666]",
   },
   EM_REUNIAO: {
     wrapper: "bg-red-50",
-    label: "text-red-400",
+    label: "text-red-700",
     labelText: "EM ANDAMENTO",
     titleColor: "text-red-500",
     borderColor: "border-l-4 border-red-400",
@@ -63,10 +63,10 @@ export default function RoomCard({
           <p className={`text-xs font-semibold uppercase tracking-wide ${eventStyle.label}`}>
             {eventStyle.labelText}
           </p>
-          <p className={`font-bold text-sm mt-1 ${eventStyle.titleColor}`}>
+          <p className={`font-bold text-xl mt-1 ${eventStyle.titleColor}`}>
             {currentEvent.title}
           </p>
-          <div className="flex items-center gap-1 text-gray-500 text-xs mt-1">
+          <div className="flex items-center gap-1 text-[#000666] text-xs mt-1">
             <Clock size={12} />
             <span>
               {currentEvent.startTime} — {currentEvent.endTime}
@@ -74,7 +74,7 @@ export default function RoomCard({
           </div>
         </div>
       ) : (
-        <div className="rounded-lg p-3 bg-gray-50 flex flex-col gap-1">
+        <div className="rounded-lg p-3 bg-gray-50 flex flex-col gap-1 border-l-4 border-gray-300">
           <div className="flex items-center gap-2 text-gray-400">
             <CalendarDays size={16} />
             <span className="text-xs font-semibold uppercase tracking-wide">Disponível</span>

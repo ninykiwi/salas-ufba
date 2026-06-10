@@ -16,10 +16,10 @@ export default function Footer() {
         © 2026 Salas UFBA 2.0 • Sistema de Gestão de Espaços Acadêmicos
       </p>
       <div className="flex items-center gap-3 text-gray-400">
-        <button className="hover:text-gray-600 transition-colors">
+        <button className="hover:text-[#000666] transition-colors">
           <HelpCircle size={18} />
         </button>
-        <button className="hover:text-gray-600 transition-colors">
+        <button className="hover:text-[#000666] transition-colors">
           <Settings size={18} />
         </button>
       </div>
