@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cadastro de Salas - Academic Resource Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config Verbatim -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#5f6161",
+                    "on-primary-container": "#8690ee",
+                    "secondary-fixed-dim": "#c6c6c7",
+                    "on-tertiary-fixed": "#001e30",
+                    "outline-variant": "#c6c5d4",
+                    "primary-container": "#1a237e",
+                    "on-primary-fixed-variant": "#343d96",
+                    "inverse-surface": "#303030",
+                    "surface-container-highest": "#e4e2e1",
+                    "on-secondary": "#ffffff",
+                    "surface-tint": "#4c56af",
+                    "on-surface-variant": "#454652",
+                    "error-container": "#ffdad6",
+                    "surface": "#fbf9f8",
+                    "secondary-container": "#dcdddd",
+                    "primary-fixed-dim": "#bdc2ff",
+                    "primary-fixed": "#e0e0ff",
+                    "on-surface": "#1b1c1c",
+                    "on-primary-fixed": "#000767",
+                    "surface-variant": "#e4e2e1",
+                    "tertiary-fixed": "#cae6ff",
+                    "on-secondary-fixed": "#1a1c1c",
+                    "tertiary-container": "#00334e",
+                    "surface-dim": "#dcd9d9",
+                    "background": "#fbf9f8",
+                    "inverse-on-surface": "#f2f0f0",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#8dcdff",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#f0eded",
+                    "on-secondary-fixed-variant": "#454747",
+                    "tertiary": "#001d2f",
+                    "inverse-primary": "#bdc2ff",
+                    "on-error": "#ffffff",
+                    "secondary": "#5d5f5f",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-container": "#00a0e8",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#f5f3f3",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#e2e2e2",
+                    "outline": "#767683",
+                    "surface-bright": "#fbf9f8",
+                    "primary": "#000666",
+                    "on-background": "#1b1c1c",
+                    "on-tertiary-fixed-variant": "#004b70",
+                    "surface-container-high": "#eae8e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sidebar-width": "280px",
+                    "grid-gutter": "1px",
+                    "container-padding": "24px",
+                    "unit": "8px",
+                    "mobile-margin": "16px"
+            },
+            "fontFamily": {
+                    "label-md": ["Hanken Grotesk"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-md-mobile": ["Hanken Grotesk"],
+                    "label-bold": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-sm": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .sidebar-active {
+            background-color: #000666;
+            color: #ffffff;
+            border-radius: 0.25rem;
+            font-weight: 700;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #000666;
+            box-shadow: 0 0 0 1px #000666;
+        }
+        .form-card {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .accent-left-border {
+            border-left: 4px solid #000666;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="flex min-h-screen">
+<!-- SideNavBar - JSON Defined -->
+<aside class="w-sidebar-width h-screen sticky top-0 left-0 bg-surface-container-low border-r border-outline-variant flex flex-col py-container-padding gap-unit overflow-y-auto">
+<div class="px-6 mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">UFBA Manager</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Academic Admin</p>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary text-on-primary rounded-lg font-label-bold font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+                    Room Schedules
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+                    Faculty Directory
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">vpn_key</span>
+                    User Permissions
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">history</span>
+                    System Logs
+                </a>
+</nav>
+<div class="mt-auto px-4">
+<button class="w-full py-3 px-4 text-primary font-label-bold font-label-md text-label-md hover:bg-secondary-container rounded-lg transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+                    Export PDF
+                </button>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar - JSON Defined -->
+<header class="flex justify-between items-center px-container-padding h-16 w-full z-40 bg-surface border-b border-outline-variant sticky top-0">
+<div class="flex items-center gap-4">
+<span class="font-headline-md text-headline-md font-bold text-primary">Academic Resource Manager</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant focus-within:ring-2 focus-within:ring-primary transition-all">
+<span class="material-symbols-outlined text-on-surface-variant mr-2">search</span>
+<input class="bg-transparent border-none p-0 text-body-sm focus:ring-0 w-64" placeholder="Search for class/room..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Admin User Profile" data-alt="A professional headshot of a university administrator in a clean office setting. The lighting is soft and natural, emphasizing a mood of reliability and competence. The image features a shallow depth of field with a blurred academic background, maintaining the institutional and modern design system aesthetic of the portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPdzpxQAMv0j0bjNLWU9tfLkANJeBGLlk43DDgygKod8wnxpt2FlULh9RmlIu7Zp4W3eMEit41bwM54qYmPNLaktQ-fgTBl5vjhzwx6mnKlopvZx9byjCkgaS9L6NVL742tzmMQLLP11rXRLyoZyaFtjoGrBIN5iXTWGssxCPa93IcYHBIjBQXcW9LjFwnBp_78m6ax42jEWwmzYpVaVKgsZYnJNnGRWDJBF3th3eTRg1HbhpeYmirouZq7K78Rrck20ViojoCWhs"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 p-container-padding overflow-y-auto">
+<div class="max-w-4xl mx-auto">
+<!-- Breadcrumbs & Header -->
+<div class="mb-8">
+<nav class="flex text-label-md font-label-md text-on-surface-variant mb-2">
+<span>Schedules</span>
+<span class="mx-2">/</span>
+<span class="text-primary font-bold">Cadastro de Sala</span>
+</nav>
+<h2 class="font-headline-md text-headline-md text-primary">Novo Registro de Sala</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Preencha as informações técnicas para disponibilizar o espaço no sistema de reservas.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Main Form Card -->
+<div class="lg:col-span-2">
+<form class="bg-surface-container-lowest p-8 rounded-lg border border-outline-variant form-card space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface" for="room_name">Nome da Sala</label>
+<input class="w-full bg-white border border-outline-variant rounded p-3 text-body-sm font-body-sm" id="room_name" placeholder="Ex: Sala 101" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface" for="building">Prédio / Instituto</label>
+<select class="w-full bg-white border border-outline-variant rounded p-3 text-body-sm font-body-sm" id="building">
+<option value="">Selecione o Prédio</option>
+<option>Instituto de Matemática e Estatística (IME)</option>
+<option>Escola Politécnica</option>
+<option>Faculdade de Direito</option>
+<option>PAF I</option>
+<option>PAF II</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface" for="floor">Andar</label>
+<select class="w-full bg-white border border-outline-variant rounded p-3 text-body-sm font-body-sm" id="floor">
+<option>Térreo</option>
+<option>1º Andar</option>
+<option>2º Andar</option>
+<option>3º Andar</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface" for="type">Tipo de Sala</label>
+<select class="w-full bg-white border border-outline-variant rounded p-3 text-body-sm font-body-sm" id="type">
+<option>Sala de Aula</option>
+<option>Laboratório</option>
+<option>Auditório</option>
+<option>Sala de Reunião</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="font-label-bold text-label-bold text-on-surface" for="capacity">Capacidade (Pessoas)</label>
+<input class="w-full bg-white border border-outline-variant rounded p-3 text-body-sm font-body-sm" id="capacity" placeholder="40" type="number"/>
+</div>
+</div>
+<div class="space-y-4">
+<label class="font-label-bold text-label-bold text-on-surface">Recursos Disponíveis</label>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Ar Condicionado</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Projetor</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Quadro Branco</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Computadores</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Sistema de Áudio</span>
+</label>
+<label class="flex items-center gap-3 p-3 border border-outline-variant rounded hover:bg-surface-container-low transition-colors cursor-pointer">
+<input class="rounded text-primary focus:ring-primary h-4 w-4" type="checkbox"/>
+<span class="text-body-sm font-body-sm">Wi-Fi Dedicado</span>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant">
+<div class="flex items-center gap-4">
+<span class="font-label-bold text-label-bold text-on-surface">Status da Sala</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-secondary-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+<span class="ms-3 text-body-sm font-body-sm text-on-surface">Ativa</span>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-end gap-4 pt-4">
+<button class="px-6 py-2.5 border border-primary text-primary rounded font-label-bold text-label-md hover:bg-surface-container-high transition-colors" type="button">
+                                        CANCELAR
+                                    </button>
+<button class="px-6 py-2.5 bg-primary text-on-primary rounded font-label-bold text-label-md hover:opacity-90 active:scale-95 transition-all" type="submit">
+                                        CADASTRAR SALA
+                                    </button>
+</div>
+</form>
+</div>
+<!-- Sidebar Info/Tooltips -->
+<div class="space-y-6">
+<div class="bg-primary text-on-primary p-6 rounded-lg accent-left-border">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-tertiary-fixed">info</span>
+<h3 class="font-label-bold text-label-bold">Gestão de Recursos</h3>
+</div>
+<p class="text-body-sm font-body-sm opacity-90 leading-relaxed">
+                                    Ao cadastrar uma sala com recursos específicos (ex: Ar Condicionado), o sistema automaticamente prioriza essas salas para turmas com necessidades especiais ou eventos oficiais do instituto.
+                                </p>
+</div>
+<div class="bg-surface-container-high p-6 rounded-lg border border-outline-variant">
+<h3 class="font-label-bold text-label-bold text-primary mb-4">Dicas de Cadastro</h3>
+<ul class="space-y-4">
+<li class="flex gap-3">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<span class="text-body-sm font-body-sm">Use nomes padronizados como "Sala 101" ou "Auditório A".</span>
+</li>
+<li class="flex gap-3">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<span class="text-body-sm font-body-sm">Certifique-se que a capacidade informada segue as normas de segurança.</span>
+</li>
+<li class="flex gap-3">
+<span class="material-symbols-outlined text-primary text-[18px]">check_circle</span>
+<span class="text-body-sm font-body-sm">O status "Inativo" remove a sala das buscas de reserva temporariamente.</span>
+</li>
+</ul>
+</div>
+<div class="rounded-lg overflow-hidden border border-outline-variant h-48 relative">
+<img alt="Ambiente de Sala de Aula" class="w-full h-full object-cover grayscale-[0.5] opacity-80" data-alt="A wide-angle professional photograph of a modern university classroom at UFBA, featuring clean white desks, ergonomic chairs, and advanced technological equipment like projectors and audio systems. The room is brightly lit with cool, even lighting, conveying a professional and academic atmosphere consistent with high-end institutional standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_OP9uWM-E3jCt6shSgv_u0ImqoTLIjnbor5iSDDOpadjSWRTef6oTpbhNRH3tQTvIXuAnuDF21MFrHRv7DIN558X39YpuypdygqpE6mV5x8ZIWg8-2by95qQ9eF9z3pW_pz7X6xOqaOcmPboeOEGneEDxQ64IMDhPE61Zip2XDofPBMAqKCeg4QlZhi2JliapdG6YphTFPAON5mfw8hNAArYeEIT60SwUVDZrGc-8vlaTpavJhm81mnds7fPZBhPdgxq7dmle0n8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-4">
+<span class="text-on-primary font-label-bold text-label-md">Padrão UFBA 2.0</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+<script>
+        // Simple micro-interactions
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('focus', () => {
+                el.parentElement.querySelector('label')?.classList.add('text-primary');
+            });
+            el.addEventListener('blur', () => {
+                el.parentElement.querySelector('label')?.classList.remove('text-primary');
+            });
+        });
+
+        const form = document.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            btn.innerText = 'PROCESSANDO...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Sala cadastrada com sucesso no sistema UFBA Manager!');
+                btn.innerText = originalText;
+                btn.disabled = false;
+                form.reset();
+            }, 1000);
+        });
+    </script>
+</body></html>

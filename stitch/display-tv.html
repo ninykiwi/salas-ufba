@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            overflow: hidden; /* Digital signage feel */
+            height: 100vh;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Carousel Transitions */
+        .carousel-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+            pointer-events: none;
+        }
+        .carousel-page.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        /* Progress Bar Animation */
+        .progress-fill {
+            width: 0%;
+        }
+        .progress-active .progress-fill {
+            animation: progress-animation 15s linear infinite;
+        }
+        @keyframes progress-animation {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        /* TV Optimization: Large typography overrides */
+        .tv-title { font-size: 2.5rem; line-height: 1.1; }
+        .tv-header-info { font-size: 1.25rem; }
+        .tv-card-title { font-size: 2.25rem; }
+        .tv-activity-name { font-size: 1.75rem; line-height: 1.2; }
+        .tv-label { font-size: 1.1rem; letter-spacing: 0.05em; }
+        .tv-subtext { font-size: 1.25rem; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#001d2f",
+                        "tertiary-fixed-dim": "#8dcdff",
+                        "tertiary-container": "#00334e",
+                        "on-secondary-fixed-variant": "#454747",
+                        "surface-container-high": "#eae8e7",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "on-primary-fixed-variant": "#343d96",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#454652",
+                        "inverse-on-surface": "#f2f0f0",
+                        "on-tertiary-fixed": "#001e30",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "primary": "#000666",
+                        "outline": "#767683",
+                        "on-tertiary-fixed-variant": "#004b70",
+                        "surface": "#fbf9f8",
+                        "on-primary-fixed": "#000767",
+                        "surface-container-low": "#f5f3f3",
+                        "on-primary-container": "#8690ee",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#bdc2ff",
+                        "primary-container": "#1a237e",
+                        "on-surface": "#1b1c1c",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#00a0e8",
+                        "surface-bright": "#fbf9f8",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1b1c1c",
+                        "background": "#fbf9f8",
+                        "secondary-container": "#dcdddd",
+                        "on-secondary-container": "#5f6161",
+                        "secondary": "#5d5f5f",
+                        "inverse-surface": "#303030",
+                        "surface-container": "#f0eded",
+                        "secondary-fixed": "#e2e2e2",
+                        "primary-fixed": "#e0e0ff",
+                        "tertiary-fixed": "#cae6ff",
+                        "error-container": "#ffdad6",
+                        "surface-tint": "#4c56af",
+                        "surface-variant": "#e4e2e1",
+                        "surface-container-highest": "#e4e2e1",
+                        "outline-variant": "#c6c5d4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "mobile-margin": "16px",
+                        "sidebar-width": "280px",
+                        "container-padding": "32px",
+                        "grid-gutter": "1px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Hanken Grotesk"],
+                        "label-bold": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-md-mobile": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "label-bold": ["14px", {"lineHeight": "20px", "fontWeight": "700"}],
+                        "headline-sm": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["64px", {"lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "body-lg": ["20px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-md-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col p-container-padding">
+<!-- Header Section (Static) -->
+<header class="flex justify-between items-end border-b-4 border-primary pb-4 mb-10 shrink-0">
+<div class="flex flex-col">
+<h2 class="tv-title font-extrabold text-primary-container mb-2">Instituto de Computação</h2>
+<div class="flex items-center gap-3 text-secondary tv-header-info">
+<span class="material-symbols-outlined text-[28px]">location_on</span>
+<span>Campus Federação — Pavilhão de Aulas (PAF)</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-6">
+<span class="text-3xl text-secondary uppercase tracking-widest font-semibold" id="current-date">Terça, 24 Outubro</span>
+<span class="text-8xl text-primary font-black tabular-nums leading-none" id="current-time">15:45</span>
+</div>
+</div>
+</header>
+<!-- Carousel Container -->
+<div class="flex-grow relative overflow-hidden">
+<!-- Page 1 -->
+<div class="carousel-page active" id="page-1">
+<main class="grid grid-cols-3 gap-8 h-full">
+<!-- Room Card 1 (Occupied) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-error absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Sala 101</h3>
+<span class="px-4 py-1.5 bg-error text-on-error font-bold text-lg rounded-sm uppercase tracking-tighter">Ocupada</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-primary pl-6">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Cálculo Diferencial e Integral I</h4>
+<p class="tv-subtext text-on-surface-variant font-medium">Prof. Ricardo Almeida</p>
+<p class="tv-subtext text-secondary mt-2">13:00 — 15:50</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Estrutura de Dados</p>
+<p class="tv-subtext font-bold text-primary">16:00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 2 (Free) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-on-tertiary-container absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Sala 102</h3>
+<span class="px-4 py-1.5 bg-on-tertiary-container text-on-tertiary font-bold text-lg rounded-sm uppercase tracking-tighter">Livre</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-on-tertiary-container pl-6 opacity-40">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Livre para Estudo</h4>
+<p class="tv-subtext text-on-surface-variant">—</p>
+<p class="tv-subtext text-secondary mt-2">—</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Banco de Dados II</p>
+<p class="tv-subtext font-bold text-primary">17:30</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 3 (Occupied) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-error absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Sala 105</h3>
+<span class="px-4 py-1.5 bg-error text-on-error font-bold text-lg rounded-sm uppercase tracking-tighter">Ocupada</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-primary pl-6">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Arquitetura de Computadores</h4>
+<p class="tv-subtext text-on-surface-variant font-medium">Profª. Mariana Souza</p>
+<p class="tv-subtext text-secondary mt-2">15:00 — 16:50</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Sistemas Operacionais</p>
+<p class="tv-subtext font-bold text-primary">18:30</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 4 (Occupied) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-error absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Auditório A</h3>
+<span class="px-4 py-1.5 bg-error text-on-error font-bold text-lg rounded-sm uppercase tracking-tighter">Ocupada</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-primary pl-6">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Workshop: IA Generativa</h4>
+<p class="tv-subtext text-on-surface-variant font-medium">Lab de Inovação Digital</p>
+<p class="tv-subtext text-secondary mt-2">14:00 — 18:00</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Ética em Computação</p>
+<p class="tv-subtext font-bold text-primary">19:00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 5 (Free) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-on-tertiary-container absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Lab 203</h3>
+<span class="px-4 py-1.5 bg-on-tertiary-container text-on-tertiary font-bold text-lg rounded-sm uppercase tracking-tighter">Livre</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-on-tertiary-container pl-6 opacity-40">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Lab Disponível</h4>
+<p class="tv-subtext text-on-surface-variant">—</p>
+<p class="tv-subtext text-secondary mt-2">—</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Compiladores</p>
+<p class="tv-subtext font-bold text-primary">16:00</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Card 6 (Occupied) -->
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-error absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Sala 208</h3>
+<span class="px-4 py-1.5 bg-error text-on-error font-bold text-lg rounded-sm uppercase tracking-tighter">Ocupada</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-primary pl-6">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Redes de Computadores I</h4>
+<p class="tv-subtext text-on-surface-variant font-medium">Prof. Carlos Eduardo</p>
+<p class="tv-subtext text-secondary mt-2">15:30 — 17:20</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Inteligência Artificial</p>
+<p class="tv-subtext font-bold text-primary">18:30</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Page 2 (Simulated content for carousel) -->
+<div class="carousel-page" id="page-2">
+<main class="grid grid-cols-3 gap-8 h-full">
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-on-tertiary-container absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Sala 301</h3>
+<span class="px-4 py-1.5 bg-on-tertiary-container text-on-tertiary font-bold text-lg rounded-sm uppercase tracking-tighter">Livre</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-on-tertiary-container pl-6 opacity-40">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Livre para Estudo</h4>
+<p class="tv-subtext text-on-surface-variant">—</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-lg">
+<p class="tv-label text-secondary uppercase mb-2">Próxima Aula</p>
+<div class="flex justify-between items-center">
+<p class="tv-subtext font-bold text-on-surface">Computação Gráfica</p>
+<p class="tv-subtext font-bold text-primary">19:00</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border-2 border-outline-variant flex flex-col relative overflow-hidden shadow-lg">
+<div class="h-2 bg-error absolute top-0 left-0 right-0"></div>
+<div class="p-8 flex flex-col h-full">
+<div class="flex justify-between items-start mb-8">
+<h3 class="tv-card-title font-black text-primary">Lab 305</h3>
+<span class="px-4 py-1.5 bg-error text-on-error font-bold text-lg rounded-sm uppercase tracking-tighter">Ocupada</span>
+</div>
+<div class="flex-grow mb-10 border-l-8 border-primary pl-6">
+<p class="tv-label text-secondary uppercase mb-2">Agora</p>
+<h4 class="tv-activity-name font-bold text-on-surface mb-2">Sistemas Distribuídos</h4>
+<p class="tv-subtext text-on-surface-variant font-medium">Prof. Fábio Costa</p>
+<p class="tv-subtext text-secondary mt-2">15:00 — 16:50</p>
+</div>
+</div>
+</div>
+<!-- More cards could be here, placeholder for layout -->
+<div class="col-span-1 bg-surface-container-low/30 border-2 border-dashed border-outline-variant rounded-lg flex items-center justify-center">
+<p class="text-secondary tv-subtext font-medium">Fim da Lista</p>
+</div>
+</main>
+</div>
+</div>
+<!-- Footer Progress Indicator (Static) -->
+<footer class="mt-10 shrink-0 progress-active">
+<div class="flex justify-between items-center mb-4">
+<div class="flex gap-4 items-center">
+<div class="flex gap-2" id="carousel-dots">
+<span class="w-4 h-4 rounded-full bg-primary" data-page="1"></span>
+<span class="w-4 h-4 rounded-full bg-outline-variant" data-page="2"></span>
+</div>
+<span class="text-2xl font-bold text-secondary ml-4" id="pagination-text">Exibindo Salas 101 - 208 de 42</span>
+</div>
+<div class="text-2xl text-primary font-black uppercase tracking-widest">Próxima atualização em 15s</div>
+</div>
+<div class="w-full bg-surface-container-high h-4 overflow-hidden rounded-full shadow-inner">
+<div class="progress-fill h-full bg-primary" id="progress-bar-element"></div>
+</div>
+</footer>
+<script>
+    // Real-time Clock
+    function updateClock() {
+        const now = new Date();
+        const timeElement = document.getElementById('current-time');
+        const dateElement = document.getElementById('current-date');
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeElement.textContent = `${hours}:${minutes}`;
+        
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        let dateStr = now.toLocaleDateString('pt-BR', options);
+        dateStr = dateStr.split(', ').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(', ');
+        dateElement.textContent = dateStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Carousel Logic
+    let currentPage = 1;
+    const totalPages = 2;
+    const intervalTime = 15000; // 15 seconds
+
+    function switchPage() {
+        // Reset current page
+        document.getElementById(`page-${currentPage}`).classList.remove('active');
+        
+        // Cycle page
+        currentPage = (currentPage % totalPages) + 1;
+        
+        // Show next page
+        document.getElementById(`page-${currentPage}`).classList.add('active');
+        
+        // Update Dots
+        const dots = document.querySelectorAll('#carousel-dots span');
+        dots.forEach((dot, idx) => {
+            if (idx + 1 === currentPage) {
+                dot.classList.remove('bg-outline-variant');
+                dot.classList.add('bg-primary');
+            } else {
+                dot.classList.remove('bg-primary');
+                dot.classList.add('bg-outline-variant');
+            }
+        });
+
+        // Update Pagination Text
+        const paginationText = document.getElementById('pagination-text');
+        if (currentPage === 1) {
+            paginationText.textContent = "Exibindo Salas 101 - 208 de 42";
+        } else {
+            paginationText.textContent = "Exibindo Salas 301 - 305 de 42";
+        }
+
+        // Restart Progress Bar Animation
+        const footer = document.querySelector('footer');
+        footer.classList.remove('progress-active');
+        void footer.offsetWidth; // Trigger reflow
+        footer.classList.add('progress-active');
+    }
+
+    // Initialize Interval
+    setInterval(switchPage, intervalTime);
+
+    // Visual adjustment for TV: Scaling the whole body if needed
+    // This ensures that even on smaller 1080p TVs without zoom, things look punchy.
+    function adjustForTV() {
+        const width = window.innerWidth;
+        if (width < 1920) {
+            // Apply slight body scaling if viewport is smaller than standard HD
+            // body.style.zoom = (width / 1920); 
+        }
+    }
+    window.onresize = adjustForTV;
+    adjustForTV();
+</script>
+</body></html>

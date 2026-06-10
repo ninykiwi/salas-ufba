@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-br"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "secondary-fixed-dim": "#c6c6c7",
+                "surface-container": "#f0eded",
+                "surface": "#fbf9f8",
+                "primary-fixed-dim": "#bdc2ff",
+                "surface-dim": "#dcd9d9",
+                "secondary-fixed": "#e2e2e2",
+                "inverse-on-surface": "#f2f0f0",
+                "primary": "#000666",
+                "on-background": "#1b1c1c",
+                "surface-container-high": "#eae8e7",
+                "outline": "#767683",
+                "on-surface": "#1b1c1c",
+                "inverse-primary": "#bdc2ff",
+                "on-primary-fixed-variant": "#343d96",
+                "tertiary-fixed-dim": "#8dcdff",
+                "on-secondary-container": "#5f6161",
+                "on-secondary": "#ffffff",
+                "surface-variant": "#e4e2e1",
+                "outline-variant": "#c6c5d4",
+                "tertiary-fixed": "#cae6ff",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#001e30",
+                "on-tertiary-container": "#00a0e8",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#4c56af",
+                "secondary": "#5d5f5f",
+                "error-container": "#ffdad6",
+                "surface-container-low": "#f5f3f3",
+                "secondary-container": "#dcdddd",
+                "background": "#fbf9f8",
+                "on-primary-fixed": "#000767",
+                "error": "#ba1a1a",
+                "primary-fixed": "#e0e0ff",
+                "on-error-container": "#93000a",
+                "surface-bright": "#fbf9f8",
+                "on-secondary-fixed-variant": "#454747",
+                "on-primary-container": "#8690ee",
+                "surface-container-highest": "#e4e2e1",
+                "on-tertiary-fixed-variant": "#004b70",
+                "inverse-surface": "#303030",
+                "on-secondary-fixed": "#1a1c1c",
+                "on-surface-variant": "#454652",
+                "on-error": "#ffffff",
+                "primary-container": "#1a237e",
+                "on-primary": "#ffffff",
+                "tertiary": "#001d2f",
+                "tertiary-container": "#00334e"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "unit": "8px",
+                "mobile-margin": "16px",
+                "grid-gutter": "1px",
+                "sidebar-width": "280px",
+                "container-padding": "24px"
+            },
+            "fontFamily": {
+                "body-sm": ["Hanken Grotesk"],
+                "headline-md": ["Hanken Grotesk"],
+                "body-lg": ["Hanken Grotesk"],
+                "headline-sm": ["Hanken Grotesk"],
+                "label-bold": ["Hanken Grotesk"],
+                "label-md": ["Hanken Grotesk"],
+                "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #fbf9f8; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .active-nav-indicator { position: absolute; right: 0; width: 4px; height: 100%; background-color: #000666; }
+        .status-accent { width: 4px; border-radius: 4px 0 0 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e2e2; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-on-background overflow-hidden">
+<!-- Sidebar (Shared Component Anchor) -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low border-r border-outline-variant flex flex-col p-unit z-50">
+<div class="mb-8 px-4 pt-4">
+<h1 class="text-headline-md font-headline-md font-bold text-primary">Salas UFBA 2.0</h1>
+<p class="font-label-md text-label-md text-secondary">Instituto de Computação</p>
+</div>
+<nav class="flex-grow space-y-2">
+<!-- Active Tab: Visão Geral -->
+<a class="group relative flex items-center px-4 py-3 text-primary font-bold bg-secondary-container/30 transition-colors hover:bg-secondary-container" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Visão Geral</span>
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-primary"></div>
+</a>
+<a class="group flex items-center px-4 py-3 text-secondary transition-colors hover:bg-secondary-container" href="#">
+<span class="material-symbols-outlined mr-3">assessment</span>
+<span class="font-label-md text-label-md">Relatórios</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-4 space-y-2">
+<a class="group flex items-center px-4 py-3 text-secondary transition-colors hover:bg-secondary-container" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Configurações</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-secondary transition-colors hover:bg-secondary-container" href="#">
+<span class="material-symbols-outlined mr-3">help</span>
+<span class="font-label-md text-label-md">Ajuda</span>
+</a>
+<button class="w-full mt-4 bg-primary text-on-primary font-bold py-3 rounded hover:opacity-90 transition-opacity">
+                LOGIN
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] flex flex-col h-screen overflow-y-auto bg-surface custom-scrollbar">
+<!-- TopAppBar (Shared Component Anchor) -->
+<header class="sticky top-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-container-padding py-unit">
+<div class="flex items-center space-x-8">
+<h2 class="text-headline-md font-headline-md font-extrabold text-primary">Painel do Administrador</h2>
+<nav class="flex space-x-6">
+<a class="text-on-primary-fixed-variant border-b-2 border-primary pb-2 font-body-lg text-body-lg" href="#">Solicitações</a>
+<a class="text-secondary hover:text-primary transition-all font-body-lg text-body-lg" href="#">Salas</a>
+<a class="text-secondary hover:text-primary transition-all font-body-lg text-body-lg" href="#">Usuários</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-outline">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-white focus:ring-2 focus:ring-primary focus:outline-none text-body-sm w-64" placeholder="Buscar professor ou sala..." type="text"/>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-secondary hover:text-primary transition-all focus:ring-2 focus:ring-primary rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-secondary hover:text-primary transition-all focus:ring-2 focus:ring-primary rounded-full">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary overflow-hidden">
+<img alt="Admin Avatar" data-alt="A professional headshot of a university administrator in a modern office setting. The man is wearing a crisp navy blue blazer, looking directly at the camera with a helpful and authoritative expression. The background is slightly blurred, showing books and a clean desk, maintaining the institutional and academic atmosphere of the design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaV26FOjUy5gRoT0Mvbl-9GLOb6LyWqbFJFH3E9ehVUIAQ-nMZLpZ5MK0CFvoZjsfz6bcNWa14Y5YzMvjFwL85jpQ_hjY3JRpTPl1WNL-jXGGGEcgH2K0Ues1F5z3mfnEZWT0PMHX2sbP8o7KNRiMx6-0TyI0Corm-RscDBT2bWCyyoKZNIkPRZWMZX6iA0Tk31IBomUwC0Hnr6yCjShqG3cH4xsdC_ZVGAh_7KfOQttZB4UrMpGRM9fDHK2eZHNvE-KBoeUsULMs"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-container-padding space-y-8">
+<!-- Occupation Summary Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-white p-6 rounded-xl border border-outline-variant flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-wider">Ocupação Atual</span>
+<span class="material-symbols-outlined text-primary">meeting_room</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-display-lg font-display-lg text-primary">72%</span>
+<span class="text-on-tertiary-container font-label-bold text-label-bold">+5% vs ontem</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full" style="width: 72%"></div>
+</div>
+</div>
+<div class="bg-white p-6 rounded-xl border border-outline-variant flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-wider">Pendências</span>
+<span class="material-symbols-outlined text-tertiary-fixed-dim">pending_actions</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-display-lg font-display-lg text-primary">12</span>
+<span class="text-secondary font-label-md text-label-md">solicitações</span>
+</div>
+<p class="text-body-sm text-secondary mt-4">Urgência: <span class="text-error font-bold">Alta</span></p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-outline-variant flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-wider">Salas Disponíveis</span>
+<span class="material-symbols-outlined text-on-tertiary-container">event_available</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-display-lg font-display-lg text-primary">08</span>
+<span class="text-secondary font-label-md text-label-md">de 32 totais</span>
+</div>
+<p class="text-body-sm text-secondary mt-4">Bloco A e B</p>
+</div>
+<div class="bg-white p-6 rounded-xl border border-outline-variant flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<span class="text-secondary font-label-md text-label-md uppercase tracking-wider">Ar Condicionado</span>
+<span class="material-symbols-outlined text-on-primary-container">ac_unit</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-display-lg font-display-lg text-primary">28</span>
+<span class="text-secondary font-label-md text-label-md">Ativos</span>
+</div>
+<p class="text-body-sm text-secondary mt-4">Economia de <span class="text-on-tertiary-container">12%</span></p>
+</div>
+</section>
+<!-- Pending Requests & Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Pending Requests Table -->
+<div class="lg:col-span-2 bg-white rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center">
+<h3 class="text-headline-sm font-headline-sm text-primary">Solicitações Pendentes</h3>
+<button class="text-primary hover:underline font-label-bold text-label-bold">VER TODAS</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low text-secondary font-label-bold text-label-bold uppercase">
+<tr>
+<th class="px-6 py-4">Professor / Sala</th>
+<th class="px-6 py-4">Horário / Data</th>
+<th class="px-6 py-4">Motivo</th>
+<th class="px-6 py-4 text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="status-accent h-10 bg-tertiary mr-3"></div>
+<div>
+<p class="font-bold text-primary text-body-lg">Dr. Carlos Alberto</p>
+<p class="text-body-sm text-secondary">Sala 102 - Bloco A</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-body-lg text-on-background">14:00 - 16:00</p>
+<p class="text-body-sm text-secondary">Hoje, 24 Out</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-md text-on-surface-variant">Aula Extra</span>
+</td>
+<td class="px-6 py-4 text-right space-x-2">
+<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors" title="Reprovar">
+<span class="material-symbols-outlined">close</span>
+</button>
+<button class="px-4 py-2 bg-primary text-white text-label-bold rounded-lg hover:opacity-90 transition-opacity" title="Aprovar">
+                                            APROVAR
+                                        </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="status-accent h-10 bg-primary-container mr-3"></div>
+<div>
+<p class="font-bold text-primary text-body-lg">Dra. Maria Helena</p>
+<p class="text-body-sm text-secondary">Auditório Laranja</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-body-lg text-on-background">08:30 - 11:30</p>
+<p class="text-body-sm text-secondary">Amanhã, 25 Out</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-md text-on-surface-variant">Defesa de Tese</span>
+</td>
+<td class="px-6 py-4 text-right space-x-2">
+<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors" title="Reprovar">
+<span class="material-symbols-outlined">close</span>
+</button>
+<button class="px-4 py-2 bg-primary text-white text-label-bold rounded-lg hover:opacity-90 transition-opacity" title="Aprovar">
+                                            APROVAR
+                                        </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center">
+<div class="status-accent h-10 bg-tertiary-container mr-3"></div>
+<div>
+<p class="font-bold text-primary text-body-lg">Prof. Ricardo Silva</p>
+<p class="text-body-sm text-secondary">Lab 04 - IC</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<p class="text-body-lg text-on-background">19:00 - 22:00</p>
+<p class="text-body-sm text-secondary">Hoje, 24 Out</p>
+</td>
+<td class="px-6 py-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-label-md text-on-surface-variant">Reunião Grupo</span>
+</td>
+<td class="px-6 py-4 text-right space-x-2">
+<button class="p-2 text-error hover:bg-error-container rounded-lg transition-colors" title="Reprovar">
+<span class="material-symbols-outlined">close</span>
+</button>
+<button class="px-4 py-2 bg-primary text-white text-label-bold rounded-lg hover:opacity-90 transition-opacity" title="Aprovar">
+                                            APROVAR
+                                        </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Active Reservations & Shortcuts -->
+<div class="space-y-6">
+<!-- Cancel Shortcuts -->
+<div class="bg-white rounded-xl border border-outline-variant p-6">
+<h3 class="text-headline-sm font-headline-sm text-primary mb-4">Gerenciar Ativos</h3>
+<p class="text-body-sm text-secondary mb-6">Cancele reservas de salas que não estão em uso para liberar espaço.</p>
+<div class="space-y-4">
+<!-- Reservation Item -->
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors group">
+<div class="flex flex-col">
+<span class="text-label-bold text-primary">SALA 204 - Bloco C</span>
+<span class="text-body-sm text-secondary">Ocupada há 1h 20m</span>
+</div>
+<button class="flex items-center justify-center w-10 h-10 bg-error-container text-error rounded hover:bg-error hover:text-white transition-all">
+<span class="material-symbols-outlined">no_meeting_room</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors group">
+<div class="flex flex-col">
+<span class="text-label-bold text-primary">Auditório Principal</span>
+<span class="text-body-sm text-secondary">Ocupada há 3h 10m</span>
+</div>
+<button class="flex items-center justify-center w-10 h-10 bg-error-container text-error rounded hover:bg-error hover:text-white transition-all">
+<span class="material-symbols-outlined">no_meeting_room</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container transition-colors group">
+<div class="flex flex-col">
+<span class="text-label-bold text-primary">Lab de Pesquisa 02</span>
+<span class="text-body-sm text-secondary">Agendada (Sem check-in)</span>
+</div>
+<button class="flex items-center justify-center w-10 h-10 bg-error-container text-error rounded hover:bg-error hover:text-white transition-all">
+<span class="material-symbols-outlined">no_meeting_room</span>
+</button>
+</div>
+</div>
+<button class="w-full mt-6 py-3 border border-primary text-primary font-bold rounded-lg hover:bg-primary/5 transition-colors">
+                            VER MAPA DE OCUPAÇÃO
+                        </button>
+</div>
+<!-- Small Utility Card -->
+<div class="bg-primary-container p-6 rounded-xl text-on-primary">
+<div class="flex items-center mb-4">
+<span class="material-symbols-outlined mr-2">info</span>
+<h4 class="font-bold text-body-lg">Status do Sistema</h4>
+</div>
+<p class="text-body-sm opacity-90">Sincronização com o SIGAA ativa. Última atualização há 5 minutos.</p>
+<div class="mt-4 flex space-x-2">
+<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+<span class="text-label-md">Todos os serviços operacionais</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Building Visual Summary (Decorative) -->
+<section class="bg-white rounded-xl border border-outline-variant p-8 relative overflow-hidden">
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="max-w-md">
+<h3 class="text-headline-md font-headline-md text-primary mb-4">Relatório de Eficiência Energética</h3>
+<p class="text-body-lg text-secondary mb-6">O sistema detectou 4 salas vazias com ar condicionado ligado. Recomendamos o desligamento remoto para otimização.</p>
+<button class="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center">
+<span class="material-symbols-outlined mr-2">bolt</span>
+                            DESLIGAR SALAS OCIOSAS
+                        </button>
+</div>
+<div class="w-full md:w-1/3 h-48 bg-surface-container rounded-xl flex items-center justify-center border-2 border-dashed border-outline-variant">
+<div class="text-center">
+<span class="material-symbols-outlined text-4xl text-outline mb-2">monitoring</span>
+<p class="text-label-md text-outline">Gráfico de Consumo Temporal</p>
+<p class="text-body-sm text-outline-variant italic">Carregando dados em tempo real...</p>
+</div>
+</div>
+</div>
+<!-- Abstract visual element -->
+<div class="absolute -right-12 -bottom-12 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
+</section>
+</div>
+</main>
+<!-- Interactive Script -->
+<script>
+        // Simple notification for action buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const label = this.innerText || this.getAttribute('title');
+                if (label && label !== 'LOGIN') {
+                    console.log(`Ação executada: ${label}`);
+                    // Feedback visual temporário
+                    const originalContent = this.innerHTML;
+                    if(this.classList.contains('bg-primary')) {
+                        this.innerText = 'SUCESSO';
+                        setTimeout(() => { this.innerHTML = originalContent; }, 2000);
+                    }
+                }
+            });
+        });
+
+        // Hover effect for table rows
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.querySelector('.status-accent').style.width = '8px';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.querySelector('.status-accent').style.width = '4px';
+            });
+        });
+    </script>
+</body></html>

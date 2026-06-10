@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Salas UFBA 2.0 - Portal de Gestão</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Hanken Grotesk Font -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#fbf9f8",
+                        "outline-variant": "#c6c5d4",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "secondary": "#5d5f5f",
+                        "inverse-on-surface": "#f2f0f0",
+                        "on-secondary-container": "#5f6161",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e0e0ff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "inverse-surface": "#303030",
+                        "surface-container-highest": "#e4e2e1",
+                        "tertiary": "#001d2f",
+                        "on-tertiary-container": "#00a0e8",
+                        "on-primary-container": "#8690ee",
+                        "surface-container": "#f0eded",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#eae8e7",
+                        "surface-bright": "#fbf9f8",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#cae6ff",
+                        "on-surface": "#1b1c1c",
+                        "inverse-primary": "#bdc2ff",
+                        "on-tertiary-fixed-variant": "#004b70",
+                        "on-surface-variant": "#454652",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#454747",
+                        "background": "#fbf9f8",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1b1c1c",
+                        "primary": "#000666",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#00334e",
+                        "secondary-fixed": "#e2e2e2",
+                        "primary-container": "#1a237e",
+                        "error": "#ba1a1a",
+                        "outline": "#767683",
+                        "on-primary-fixed-variant": "#343d96",
+                        "primary-fixed-dim": "#bdc2ff",
+                        "on-primary-fixed": "#000767",
+                        "surface-dim": "#dcd9d9",
+                        "secondary-container": "#dcdddd",
+                        "surface-tint": "#4c56af",
+                        "surface-variant": "#e4e2e1",
+                        "tertiary-fixed-dim": "#8dcdff",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#f5f3f3",
+                        "on-tertiary-fixed": "#001e30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "container-padding": "24px",
+                        "sidebar-width": "280px",
+                        "mobile-margin": "16px",
+                        "grid-gutter": "1px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "body-sm": ["Hanken Grotesk"],
+                        "label-bold": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "headline-md-mobile": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #fbf9f8;
+            color: #1b1c1c;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .room-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .room-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .clock-flash {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c6c5d4;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #767683;
+        }
+    </style>
+</head>
+<body class="bg-background flex">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-low dark:bg-surface-dim border-r border-outline-variant dark:border-outline flex flex-col z-[60]">
+<div class="p-6 flex flex-col gap-1">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-12 h-12 bg-primary flex items-center justify-center rounded-lg">
+<span class="text-white font-bold text-2xl">U</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed leading-tight">Salas UFBA 2.0</h1>
+<p class="font-label-md text-label-md text-secondary">Instituto de Computação</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-grow">
+<a class="flex items-center gap-3 px-4 py-3 text-primary dark:text-primary-fixed font-bold border-r-4 border-primary dark:border-primary-fixed bg-secondary-container/30 transition-opacity opacity-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Visão Geral</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-secondary-container dark:hover:bg-secondary-container transition-colors" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-label-md text-label-md">Relatórios</span>
+</a>
+<a class="flex items-center justify-between px-4 py-3 text-secondary dark:text-secondary-fixed-dim hover:bg-secondary-container transition-colors" href="#"><div class="flex items-center gap-3"><span class="material-symbols-outlined">pending_actions</span><span class="font-label-md text-label-md">Solicitações</span></div><span class="bg-error text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span></a></nav>
+<div class="mt-auto pt-6 border-t border-outline-variant">
+<button class="w-full bg-primary text-white py-3 rounded-lg font-label-bold text-label-bold hover:opacity-90 transition-opacity mb-6">
+                LOGIN
+            </button>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-2 text-secondary dark:text-secondary-fixed-dim hover:bg-secondary-container transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Configurações</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-secondary dark:text-secondary-fixed-dim hover:bg-secondary-container transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md text-label-md">Ajuda</span>
+</a>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Area -->
+<div class="ml-[280px] flex-grow flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 bg-surface dark:bg-background border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-container-padding py-4 h-[100px]">
+<div class="flex items-center gap-4">
+<div class="relative min-w-[180px]">
+<label class="absolute -top-2 left-2 px-1 bg-surface text-[10px] font-label-bold text-secondary uppercase">Campus</label>
+<select class="w-full bg-transparent border border-outline-variant rounded-lg px-3 py-2 text-body-sm font-body-sm focus:ring-2 focus:ring-primary outline-none appearance-none">
+<option>Federação</option>
+<option>Ondina</option>
+<option>Canela</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+</div>
+<div class="relative min-w-[240px]">
+<label class="absolute -top-2 left-2 px-1 bg-surface text-[10px] font-label-bold text-secondary uppercase">Prédio</label>
+<select class="w-full bg-transparent border border-outline-variant rounded-lg px-3 py-2 text-body-sm font-body-sm focus:ring-2 focus:ring-primary outline-none appearance-none">
+<option>Instituto de Computação</option>
+<option>PAF I</option>
+<option>PAF II</option>
+<option>Escola Politécnica</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+</div>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<div class="flex gap-4">
+<a class="text-on-primary-fixed-variant dark:text-on-primary-fixed border-b-2 border-primary dark:border-primary-fixed pb-1 font-label-bold" href="#">Hoje</a>
+<a class="text-secondary dark:text-secondary-fixed hover:text-primary transition-all font-label-bold" href="#">Semana</a>
+<a class="text-secondary dark:text-secondary-fixed hover:text-primary transition-all font-label-bold" href="#">Mês</a>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<!-- Clock and Date -->
+<div class="text-right">
+<div class="font-display-lg text-[32px] leading-none font-bold text-primary clock-flash tracking-tight" id="live-clock">09:15</div>
+<div class="font-label-bold text-[10px] text-secondary uppercase tracking-widest mt-1" id="live-date">Quarta-feira, 12 Junho</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-secondary-container rounded-full transition-colors text-primary focus:ring-2 focus:ring-primary">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 hover:bg-secondary-container rounded-full transition-colors text-primary focus:ring-2 focus:ring-primary">
+<span class="material-symbols-outlined">schedule</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Grid -->
+<main class="p-container-padding flex-grow overflow-y-auto">
+<!-- Filter/Header Section -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Ocupação em Tempo Real</h2>
+<p class="font-body-sm text-body-sm text-secondary">Acompanhe a disponibilidade das salas do Instituto de Computação.</p>
+</div>
+<div class="flex gap-3">
+<div class="flex bg-secondary-container rounded-lg p-1">
+<button class="px-4 py-1.5 bg-surface-container-lowest shadow-sm rounded-md font-label-bold text-label-bold text-primary">TODAS</button>
+<button class="px-4 py-1.5 font-label-bold text-label-bold text-secondary hover:text-primary transition-colors">LIVRES</button>
+<button class="px-4 py-1.5 font-label-bold text-label-bold text-secondary hover:text-primary transition-colors">EM AULA</button>
+</div>
+</div>
+</div>
+<!-- Rooms Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+<!-- Room Card 1 - Occupied -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">SmartClass II</h3>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Ocupada</span>
+</div>
+<div class="bg-[#E3F2FD] border-l-4 border-primary p-4 rounded-r-lg mb-6">
+<p class="font-label-bold text-label-bold text-primary mb-1 uppercase tracking-wider">Acontecendo Agora</p>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-primary-fixed mb-1 leading-tight">Aula: Grafos</h4>
+<div class="flex items-center gap-1.5 text-on-primary-fixed-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-body-sm text-body-sm">07:55 — 09:35</span>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Reunião Geral IC</span>
+<span class="font-label-bold text-label-bold text-secondary">10:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between"><button class="text-secondary font-label-md text-label-md hover:text-primary flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-sm">swap_horiz</span> Solicitar Troca</button>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 40 Pessoas
+                    </span>
+<button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button>
+</div>
+</div>
+<!-- Room Card 2 - Free -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Laboratório 1</h3>
+<span class="bg-surface-container-highest text-secondary px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Livre</span>
+</div>
+<div class="bg-surface-container-low border-l-4 border-outline-variant p-4 rounded-r-lg mb-6">
+<div class="flex items-center gap-3 text-secondary mb-1">
+<span class="material-symbols-outlined">event_available</span>
+<p class="font-label-bold text-label-bold uppercase tracking-wider">Disponível</p>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-secondary mb-1 leading-tight">SALA LIVRE</h4>
+<p class="font-body-sm text-body-sm">Sem atividades no momento</p>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Aula: Lab 1 (Redes)</span>
+<span class="font-label-bold text-label-bold text-secondary">11:35</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between"><button class="bg-primary text-white px-3 py-1.5 rounded-lg font-label-bold text-[10px] uppercase hover:opacity-90 transition-opacity">Solicitar Reserva</button><button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button></div>
+</div>
+<!-- Room Card 3 - Occupied -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Sala 101</h3>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Ocupada</span>
+</div>
+<div class="bg-[#E3F2FD] border-l-4 border-primary p-4 rounded-r-lg mb-6">
+<p class="font-label-bold text-label-bold text-primary mb-1 uppercase tracking-wider">Acontecendo Agora</p>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-primary-fixed mb-1 leading-tight">Aula: EDA 1</h4>
+<div class="flex items-center gap-1.5 text-on-primary-fixed-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-body-sm text-body-sm">08:50 — 10:40</span>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Cálculo A</span>
+<span class="font-label-bold text-label-bold text-secondary">13:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between"><button class="text-secondary font-label-md text-label-md hover:text-primary flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-sm">swap_horiz</span> Solicitar Troca</button>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 60 Pessoas
+                    </span>
+<button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button>
+</div>
+</div>
+<!-- Room Card 4 - Meeting -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Sala de Reuniões</h3>
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Em Reunião</span>
+</div>
+<div class="bg-[#FFEBEE] border-l-4 border-error p-4 rounded-r-lg mb-6">
+<p class="font-label-bold text-label-bold text-error mb-1 uppercase tracking-wider">Em andamento</p>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-error-container mb-1 leading-tight">Planejamento 2024</h4>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-body-sm text-body-sm">09:00 — 11:00</span>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Reunião Formas</span>
+<span class="font-label-bold text-label-bold text-secondary">14:50</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between">
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 12 Pessoas
+                    </span>
+<button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button>
+</div>
+</div>
+<!-- Room Card 5 - Free -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Auditório</h3>
+<span class="bg-surface-container-highest text-secondary px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Livre</span>
+</div>
+<div class="bg-surface-container-low border-l-4 border-outline-variant p-4 rounded-r-lg mb-6">
+<div class="flex items-center gap-3 text-secondary mb-1">
+<span class="material-symbols-outlined">event_available</span>
+<p class="font-label-bold text-label-bold uppercase tracking-wider">Disponível</p>
+</div>
+<h4 class="font-headline-sm text-headline-sm font-bold text-secondary mb-1 leading-tight">SALA LIVRE</h4>
+<p class="font-body-sm text-body-sm">Livre até as 18:30</p>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Colação de Grau</span>
+<span class="font-label-bold text-label-bold text-secondary">18:30</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between"><button class="bg-primary text-white px-3 py-1.5 rounded-lg font-label-bold text-[10px] uppercase hover:opacity-90 transition-opacity">Solicitar Reserva</button><button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button></div>
+</div>
+<!-- Room Card 6 - Occupied -->
+<div class="room-card bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col h-full">
+<div class="p-container-padding flex-grow">
+<div class="flex justify-between items-start mb-4">
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary">Sala 102</h3>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full font-label-bold text-[10px] uppercase">Ocupada</span>
+</div>
+<div class="bg-[#E3F2FD] border-l-4 border-primary p-4 rounded-r-lg mb-6">
+<p class="font-label-bold text-label-bold text-primary mb-1 uppercase tracking-wider">Acontecendo Agora</p>
+<h4 class="font-headline-sm text-headline-sm font-bold text-on-primary-fixed mb-1 leading-tight">Aula: POO</h4>
+<div class="flex items-center gap-1.5 text-on-primary-fixed-variant">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-body-sm text-body-sm">07:55 — 09:35</span>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-widest">Próximo Evento</p>
+<div class="flex justify-between items-center py-2 border-t border-outline-variant">
+<span class="font-body-lg text-body-lg font-medium">Eletromag</span>
+<span class="font-label-bold text-label-bold text-secondary">09:45</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-container-padding py-3 flex items-center justify-between"><button class="text-secondary font-label-md text-label-md hover:text-primary flex items-center gap-1 transition-colors"><span class="material-symbols-outlined text-sm">swap_horiz</span> Solicitar Troca</button>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">group</span> 45 Pessoas
+                    </span>
+<button class="text-primary font-label-bold text-label-bold hover:underline">Ver Horários</button>
+</div>
+</div>
+<!-- Add Card -->
+<div class="room-card border-2 border-dashed border-outline-variant rounded-xl flex items-center justify-center p-container-padding text-secondary hover:border-primary hover:text-primary transition-all cursor-pointer min-h-[300px]">
+<div class="text-center">
+<span class="material-symbols-outlined text-4xl mb-2">add_circle</span>
+<p class="font-label-bold text-label-bold uppercase tracking-wider">Cadastrar Sala</p>
+</div>
+</div>
+</div>
+<!-- System Status Bar -->
+<div class="mt-12 bg-surface-container-low border border-outline-variant rounded-xl p-6"><div class="flex justify-between items-center mb-4"><h3 class="font-headline-sm text-headline-sm text-primary">Solicitações Pendentes (Admin)</h3><span class="text-label-md text-secondary">3 novas solicitações</span></div><div class="space-y-3"><div class="bg-white p-4 rounded-lg border border-outline-variant flex justify-between items-center shadow-sm"><div><p class="font-label-bold text-label-bold text-primary">Prof. Ricardo Silva</p><p class="text-body-sm text-secondary">Solicitou: Laboratório 1 (Hoje, 14:00 - 16:00)</p></div><div class="flex gap-2"><button class="px-4 py-1.5 bg-primary text-white rounded-lg font-label-bold text-label-bold hover:opacity-90">Aceitar</button><button class="px-4 py-1.5 border border-error text-error rounded-lg font-label-bold text-label-bold hover:bg-error-container">Recusar</button></div></div><div class="bg-white p-4 rounded-lg border border-outline-variant flex justify-between items-center shadow-sm"><div><p class="font-label-bold text-label-bold text-primary">Profa. Ana Costa</p><p class="text-body-sm text-secondary">Troca: Sala 101 (Hoje, 09:00)</p></div><div class="flex gap-2"><button class="px-4 py-1.5 bg-primary text-white rounded-lg font-label-bold text-label-bold hover:opacity-90">Aceitar</button><button class="px-4 py-1.5 border border-error text-error rounded-lg font-label-bold text-label-bold hover:bg-error-container">Recusar</button></div></div></div></div><div class="mt-12 p-6 bg-primary rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white">info</span>
+</div>
+<div>
+<p class="text-white font-headline-sm text-headline-sm font-bold">Informativo Acadêmico</p>
+<p class="text-white/80 font-body-sm text-body-sm">Período de reserva de salas para eventos extras aberto até dia 20/06.</p>
+</div>
+</div>
+<button class="bg-white text-primary px-6 py-2 rounded-lg font-label-bold text-label-bold hover:bg-primary-fixed transition-colors">SAIBA MAIS</button>
+</div>
+<!-- Footer Identity -->
+<footer class="mt-12 py-8 border-t border-outline-variant">
+<div class="flex flex-col md:flex-row justify-between items-center opacity-60">
+<p class="font-label-md text-label-md">© 2024 Salas UFBA 2.0 • Sistema de Gestão de Espaços Acadêmicos</p>
+<div class="flex gap-6 mt-4 md:mt-0">
+<span class="material-symbols-outlined text-xl cursor-pointer hover:text-primary">help</span>
+<span class="material-symbols-outlined text-xl cursor-pointer hover:text-primary">settings</span>
+</div>
+</div>
+</footer>
+</main>
+</div>
+<script>
+    // Update clock and date dynamically
+    function updateDateTime() {
+        const now = new Date();
+        
+        // Format Clock: HH:MM
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('live-clock').textContent = `${hours}:${minutes}`;
+
+        // Format Date: Day of week, Day Month
+        const options = { weekday: 'long', day: 'numeric', month: 'long' };
+        const dateStr = now.toLocaleDateString('pt-BR', options);
+        // Capitalize first letter
+        const formattedDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        document.getElementById('live-date').textContent = formattedDate;
+    }
+
+    // Run once and then every minute
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    // Simple filtering simulation (visual only)
+    const filterBtns = document.querySelectorAll('.bg-secondary-container button');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => {
+                b.classList.remove('bg-surface-container-lowest', 'shadow-sm', 'text-primary');
+                b.classList.add('text-secondary');
+            });
+            btn.classList.add('bg-surface-container-lowest', 'shadow-sm', 'text-primary');
+            btn.classList.remove('text-secondary');
+        });
+    });
+</script>
+</body></html>
