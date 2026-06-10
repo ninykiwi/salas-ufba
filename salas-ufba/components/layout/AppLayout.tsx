@@ -8,7 +8,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <Sidebar />
       <div className="ml-[280px] flex-grow flex flex-col">
         <Header />
-        <main className="p-6 flex-grow overflow-y-auto">
+        <main className="p-container-padding flex-grow overflow-y-auto">
           {children}
         </main>
       </div>
