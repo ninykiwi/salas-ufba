@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  /* Colors */
+  --surface: #fbf9f8;
+  --outline-variant: #c6c5d4;
+  --secondary: #5d5f5f;
+  --surface-container-lowest: #ffffff;
+  --surface-container-highest: #e4e2e1;
+  --surface-container-high: #eae8e7;
+  --surface-container: #f0eded;
+  --surface-container-low: #f5f3f3;
+  --surface-dim: #dcd9d9;
+  --surface-variant: #e4e2e1;
+
+  --primary: #000666;
+  --primary-container: #1a237e;
+  --primary-fixed: #e0e0ff;
+  --primary-fixed-dim: #bdc2ff;
+
+  --secondary-container: #dcdddd;
+
+  --tertiary: #001d2f;
+  --tertiary-container: #00334e;
+  --tertiary-fixed: #cae6ff;
+  --tertiary-fixed-dim: #8dcdff;
+
+  --error: #ba1a1a;
+  --error-container: #ffdad6;
+
+  --background: #fbf9f8;
+  --inverse-surface: #303030;
+  --inverse-primary: #bdc2ff;
+
+  --on-surface: #1b1c1c;
+  --on-surface-variant: #454652;
+  --on-primary: #ffffff;
+  --on-primary-container: #8690ee;
+  --on-secondary: #ffffff;
+  --on-secondary-container: #5f6161;
+  --on-tertiary: #ffffff;
+  --on-error: #ffffff;
+
+  --outline: #767683;
+  --surface-tint: #4c56af;
+
+  /* Radius */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* Spacing */
+  --container-padding: 24px;
+  --sidebar-width: 280px;
+  --mobile-margin: 16px;
+  --grid-gutter: 1px;
+}
+
+@theme {
+  /* Colors */
+  --color-surface: var(--surface);
+  --color-outline-variant: var(--outline-variant);
+  --color-secondary: var(--secondary);
+  --color-primary: var(--primary);
+
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+
+  --color-background: var(--background);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+
+  /* Radius */
+  --radius: var(--radius-sm);
+  --radius-lg: var(--radius-md);
+  --radius-xl: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  /* Spacing */
+  --spacing-container-padding: var(--container-padding);
+  --spacing-sidebar-width: var(--sidebar-width);
+  --spacing-mobile-margin: var(--mobile-margin);
+  --spacing-grid-gutter: var(--grid-gutter);
+
+  /* Fonts */
+  --font-body-lg: "Hanken Grotesk", sans-serif;
+  --font-label-md: "Hanken Grotesk", sans-serif;
+  --font-display-lg: "Hanken Grotesk", sans-serif;
+  --font-body-sm: "Hanken Grotesk", sans-serif;
+  --font-label-bold: "Hanken Grotesk", sans-serif;
+  --font-headline-sm: "Hanken Grotesk", sans-serif;
+  --font-headline-md: "Hanken Grotesk", sans-serif;
+}
