@@ -17,7 +17,7 @@ export function SelectDropdown({ label, options }: SelectDropdownProps) {
         ))}
       </select>
       <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">
-        v
+        expand_more
       </span>
     </div>
   );

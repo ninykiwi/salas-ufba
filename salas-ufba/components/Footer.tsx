@@ -1,18 +1,27 @@
-export function Footer() {
+import { HelpCircle, Settings } from "lucide-react";
+import Image from "next/image";
+
+export default function Footer() {
   return (
-    <footer className="mt-12 py-8 border-t border-[var(--outline-variant)]">
-      <div className="flex flex-col md:flex-row justify-between items-center opacity-60">
-        <p className="font-label-md text-label-md text-[var(--on-surface)]">
-          © {new Date().getFullYear()} Salas UFBA 2.0 • Sistema de Gestão de Espaços Acadêmicos
-        </p>
-        <div className="flex gap-6 mt-4 md:mt-0">
-          <button className="hover:text-[var(--primary)] transition-colors" aria-label="Ajuda">
-            <span className="material-symbols-outlined text-xl">help</span>
-          </button>
-          <button className="hover:text-[var(--primary)] transition-colors" aria-label="Configurações">
-            <span className="material-symbols-outlined text-xl">settings</span>
-          </button>
+    <footer className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
+      <div className="flex items-center gap-3">
+      <Image src="/ufba-logo.png" alt="UFBA" width={28} height={28} className="object-contain" />
+
+        <div>
+          <p className="text-xs font-bold text-gray-800">UFBA</p>
+          <p className="text-xs text-gray-400">UNIVERSIDADE FEDERAL DA BAHIA</p>
         </div>
+      </div>
+      <p className="text-xs text-gray-400">
+        © 2026 Salas UFBA 2.0 • Sistema de Gestão de Espaços Acadêmicos
+      </p>
+      <div className="flex items-center gap-3 text-gray-400">
+        <button className="hover:text-gray-600 transition-colors">
+          <HelpCircle size={18} />
+        </button>
+        <button className="hover:text-gray-600 transition-colors">
+          <Settings size={18} />
+        </button>
       </div>
     </footer>
   );

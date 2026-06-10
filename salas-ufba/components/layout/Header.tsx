@@ -46,10 +46,10 @@ export function Header() {
         </div>
         <div className="flex gap-2">
           <button className="p-2 hover:bg-secondary-container rounded-full transition-colors text-primary">
-            <span className="material-symbols-outlined">N</span>
+            <span className="material-symbols-outlined">notifications</span>
           </button>
           <button className="p-2 hover:bg-secondary-container rounded-full transition-colors text-primary">
-            <span className="material-symbols-outlined">s</span>
+            <span className="material-symbols-outlined">info</span>
           </button>
         </div>
       </div>
