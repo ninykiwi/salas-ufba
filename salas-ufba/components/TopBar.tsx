@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapPin, Building2, ChevronDown } from "lucide-react";
+import { MapPin, Building2, ChevronDown, Info, Bell } from "lucide-react";
 
 interface TopBarProps {
   campuses: { id: number; name: string }[];
@@ -115,6 +115,23 @@ export default function TopBar({
                     )}
                 </div>
 
+            </div>
+
+            <div className="flex items-center gap-4">
+                
+                <div className="text-right mr-[10]">
+                    <p className="text-3xl font-bold text-[#000666] leading-none">{time}</p>
+                    <p className="text-xs text-gray-700 mt-0.5">{dateLabel}</p>
+                </div>
+
+                <button className="text-gray-400 hover:text-[#000666] transition-colors">
+                    <Bell size={20} />
+                </button>
+
+                <button className="text-gray-400 hover:text-[#000666] transition-colors">
+                    <Info size={20} />
+                </button>
+                
             </div>
 
         </div>

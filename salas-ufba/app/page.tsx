@@ -1,92 +1,145 @@
-import React from 'react';
-import { AppLayout } from '../components/layout/AppLayout';
-import { StatusFilter } from '../components/ui/StatusFilter';
-import { InfoBanner } from '../components/ui/InfoBanner';
-import { RoomCard } from '../components/rooms/RoomCard';
-import { AddRoomCard } from '../components/rooms/AddRoomCard';
+"use client";
 
-export default function Dashboard() {
-  return (
-    <AppLayout>
-      {/* Header da Seção */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
-        <div>
-          <h2 className="font-headline-md text-headline-md text-on-surface">Ocupação em Tempo Real</h2>
-          <p className="font-body-sm text-body-sm text-secondary">Acompanhe a disponibilidade das salas do Instituto de Computação.</p>
+import { useState } from "react";
+import Sidebar from "@/components/Sidebar";
+import TopBar from "@/components/TopBar";
+import Footer from "@/components/Footer";
+import RoomCard from "@/components/RoomCard";
+
+type StatusFilter = "TODAS" | "LIVRES" | "EM_AULA";
+type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
+
+interface Room {
+  id: number;
+  name: string;
+  status: RoomStatus;
+  currentEvent?: { title: string; startTime: string; endTime: string };
+  nextEvent?: { title: string; time: string };
+  capacity: number;
+  freeUntil?: string;
+}
+
+const rooms: Room[] = [
+  {
+    id: 1,
+    name: "SmartClass II",
+    status: "OCUPADA",
+    currentEvent: { title: "Aula: Grafos", startTime: "07:55", endTime: "09:35" },
+    nextEvent: { title: "Reunião Geral IC", time: "10:00" },
+    capacity: 40,
+  },
+  {
+    id: 2,
+    name: "Laboratório 1",
+    status: "LIVRE",
+    nextEvent: { title: "Aula: Lab 1 (Redes)", time: "11:35" },
+    capacity: 30,
+  },
+  {
+    id: 3,
+    name: "Sala 101",
+    status: "OCUPADA",
+    currentEvent: { title: "Aula: EDA 1", startTime: "08:50", endTime: "10:40" },
+    nextEvent: { title: "Cálculo A", time: "13:00" },
+    capacity: 60,
+  },
+  {
+    id: 4,
+    name: "Sala de Reuniões",
+    status: "EM_REUNIAO",
+    currentEvent: { title: "Planejamento 2024", startTime: "09:00", endTime: "11:00" },
+    nextEvent: { title: "Reunião Formas", time: "14:50" },
+    capacity: 12,
+  },
+  {
+    id: 5,
+    name: "Auditório",
+    status: "LIVRE",
+    nextEvent: { title: "Colação de Grau", time: "18:30" },
+    capacity: 120,
+    freeUntil: "18:30",
+  },
+  {
+    id: 6,
+    name: "Sala 102",
+    status: "OCUPADA",
+    currentEvent: { title: "Aula: POO", startTime: "07:55", endTime: "09:35" },
+    nextEvent: { title: "Eletromag", time: "09:45" },
+    capacity: 45,
+  },
+];
+
+const filterMap: Record<StatusFilter, RoomStatus[]> = {
+  TODAS: ["OCUPADA", "LIVRE", "EM_REUNIAO"],
+  LIVRES: ["LIVRE"],
+  EM_AULA: ["OCUPADA", "EM_REUNIAO"],
+};
+
+const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
+
+const mockInstitutes = [{ id: 1, name: "Instituto de Computação" }, {id: 2, name: "Faculdade de Direito"}];
+
+export default function Home() {
+
+  const [selectedCampus, setSelectedCampus] = useState<number | null>(1);
+
+  const [selectedInstitute, setSelectedInstitute] = useState<number | null>(1);
+
+  const [filter, setFilter] = useState<StatusFilter>("TODAS");
+
+  const filtered = rooms.filter((r) => filterMap[filter].includes(r.status));
+
+return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar activeHref="/" />
+
+        <div className="flex flex-col flex-1 overflow-hidden">
+
+          <TopBar
+            campuses={mockCampuses}
+            selectedCampus={selectedCampus}
+            onCampusChange={setSelectedCampus}
+            institutes={mockInstitutes}
+            selectedInstitute={selectedInstitute}
+            onInstituteChange={setSelectedInstitute}
+          />
+
+          <main className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Ocupação em Tempo Real</h1>
+                <p className="text-sm text-gray-400 mt-1">
+                  Acompanhe a disponibilidade das salas do IC.
+                </p>
+              </div>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
+                {(["TODAS", "LIVRES", "EM_AULA"] as StatusFilter[]).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                      filter === f
+                        ? "bg-[#000666] text-white"
+                        : "text-gray-500 hover:bg-gray-50"
+                    }`}
+                  >
+                    {f === "EM_AULA" ? "EM AULA" : f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {filtered.map((room) => (
+                <RoomCard key={room.id} {...room} />
+              ))}
+            </div>
+          </main>
         </div>
-        <StatusFilter options={['TODAS', 'LIVRES', 'EM AULA']} />
       </div>
 
-      {/* Grid de Salas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-        <RoomCard 
-          name="SmartClass II"
-          status="Ocupada"
-          currentEvent={{ label: 'Acontecendo Agora', title: 'Aula: Grafos', time: '07:55 — 09:35' }}
-          nextEvent={{ title: 'Reunião Geral IC', time: '10:00' }}
-          capacity={40}
-        />
-        
-        <RoomCard 
-          name="Laboratório 1"
-          status="Livre"
-          currentEvent={{ label: 'Disponível', title: 'SALA LIVRE', description: 'Sem atividades no momento' }}
-          nextEvent={{ title: 'Aula: Lab 1 (Redes)', time: '11:35' }}
-          capacity={30}
-          capacityType="Máquinas"
-        />
-
-        <RoomCard 
-          name="Sala 101"
-          status="Ocupada"
-          currentEvent={{ label: 'Acontecendo Agora', title: 'Aula: EDA 1', time: '08:50 — 10:40' }}
-          nextEvent={{ title: 'Cálculo A', time: '13:00' }}
-          capacity={60}
-        />
-
-        <RoomCard 
-          name="Sala de Reuniões"
-          status="Em Reunião"
-          currentEvent={{ label: 'Em andamento', title: 'Planejamento 2024', time: '09:00 — 11:00' }}
-          nextEvent={{ title: 'Reunião Formas', time: '14:50' }}
-          capacity={12}
-        />
-
-        <RoomCard 
-          name="Auditório"
-          status="Livre"
-          currentEvent={{ label: 'Disponível', title: 'SALA LIVRE', description: 'Livre até as 18:30' }}
-          nextEvent={{ title: 'Colação de Grau', time: '18:30' }}
-          capacity={120}
-        />
-
-        <RoomCard 
-          name="Sala 102"
-          status="Ocupada"
-          currentEvent={{ label: 'Acontecendo Agora', title: 'Aula: POO', time: '07:55 — 09:35' }}
-          nextEvent={{ title: 'Eletromag', time: '09:45' }}
-          capacity={45}
-        />
-
-        <AddRoomCard />
-      </div>
-
-      <InfoBanner 
-        title="Informativo Acadêmico"
-        description="Período de reserva de salas para eventos extras aberto até dia 20/06."
-        buttonText="SAIBA MAIS"
-      />
-
-      {/* Footer */}
-      <footer className="mt-12 py-8 border-t border-outline-variant">
-        <div className="flex flex-col md:flex-row justify-between items-center opacity-60">
-          <p className="font-label-md text-label-md">© 2024 Salas UFBA 2.0 • Sistema de Gestão de Espaços Acadêmicos</p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <span className="material-symbols-outlined text-xl cursor-pointer hover:text-primary">help</span>
-            <span className="material-symbols-outlined text-xl cursor-pointer hover:text-primary">settings</span>
-          </div>
-        </div>
-      </footer>
-    </AppLayout>
+      <Footer />
+    </div>
   );
 }
