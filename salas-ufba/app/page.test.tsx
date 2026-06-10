@@ -12,7 +12,7 @@ describe("Home", () => {
     render(<Home />);
     expect(screen.getByText("TODAS")).toBeInTheDocument();
     expect(screen.getByText("LIVRES")).toBeInTheDocument();
-    expect(screen.getByText("EM AULA")).toBeInTheDocument();
+    expect(screen.getByText("OCUPADAS")).toBeInTheDocument();
   });
 
   it("exibe todas as salas por padrão", () => {
@@ -31,9 +31,9 @@ describe("Home", () => {
     expect(screen.queryByText("Sala de Reuniões")).not.toBeInTheDocument();
   });
 
-  it("filtra salas ocupadas e em reunião ao clicar em EM AULA", async () => {
+  it("filtra salas ocupadas e em reunião ao clicar em OCUPADAS", async () => {
     render(<Home />);
-    await userEvent.click(screen.getByText("EM AULA"));
+    await userEvent.click(screen.getByText("OCUPADAS"));
     expect(screen.getByText("SmartClass II")).toBeInTheDocument();
     expect(screen.getByText("Sala de Reuniões")).toBeInTheDocument();
     expect(screen.queryByText("Laboratório 1")).not.toBeInTheDocument();

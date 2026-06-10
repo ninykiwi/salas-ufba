@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
 import RoomCard from "@/components/RoomCard";
 
-type StatusFilter = "TODAS" | "LIVRES" | "EM_AULA";
+type StatusFilter = "TODAS" | "LIVRES" | "OCUPADAS";
 type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
 
 interface Room {
@@ -72,7 +72,7 @@ const rooms: Room[] = [
 const filterMap: Record<StatusFilter, RoomStatus[]> = {
   TODAS: ["OCUPADA", "LIVRE", "EM_REUNIAO"],
   LIVRES: ["LIVRE"],
-  EM_AULA: ["OCUPADA", "EM_REUNIAO"],
+  OCUPADAS: ["OCUPADA", "EM_REUNIAO"],
 };
 
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
@@ -113,18 +113,18 @@ return (
                   Acompanhe a disponibilidade das salas do IC.
                 </p>
               </div>
-              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white">
-                {(["TODAS", "LIVRES", "EM_AULA"] as StatusFilter[]).map((f) => (
+              <div className="grid grid-cols-3 border border-gray-200 rounded-lg overflow-hidden bg-white">
+                {(["TODAS", "LIVRES", "OCUPADAS"] as StatusFilter[]).map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-2 text-xs font-semibold transition-colors ${
+                    className={`flex-1 px-2 py-2 text-xs font-semibold transition-colors ${
                       filter === f
                         ? "bg-[#000666] text-white"
                         : "text-gray-500 hover:bg-gray-50"
                     }`}
                   >
-                    {f === "EM_AULA" ? "EM AULA" : f}
+                    {f}
                   </button>
                 ))}
               </div>
