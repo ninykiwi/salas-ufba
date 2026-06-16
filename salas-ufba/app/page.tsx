@@ -47,7 +47,7 @@ const rooms: Room[] = [
     id: 4,
     name: "Sala de Reuniões",
     status: "EM_REUNIAO",
-    currentEvent: { title: "Planejamento 2024", startTime: "09:00", endTime: "11:00" },
+    currentEvent: { title: "Planejamento 2026", startTime: "09:00", endTime: "11:00" },
     nextEvent: { title: "Reunião Formas", time: "14:50" },
     capacity: 12,
   },
