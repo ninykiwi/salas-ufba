@@ -1,26 +1,28 @@
 type Status = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
+type Variant = "default" | "tv";
 
 interface StatusBadgeProps {
   status: Status;
+  variant?: Variant;
 }
 
-const statusConfig: Record<Status, { label: string; className: string }> = {
+const statusConfig: Record<Status, Record<Variant, { label: string; className: string }>> = {
   OCUPADA: {
-    label: "OCUPADA",
-    className: "bg-[#1A237E] text-white",
+    default: { label: "OCUPADA", className: "bg-indigo-900 text-white" },
+    tv: { label: "OCUPADA", className: "bg-red-600 text-white" },
   },
   LIVRE: {
-    label: "LIVRE",
-    className: "bg-gray-200 text-gray-600",
+    default: { label: "LIVRE", className: "bg-gray-200 text-gray-600" },
+    tv: { label: "LIVRE", className: "bg-gray-500 text-white" },
   },
   EM_REUNIAO: {
-    label: "EM REUNIÃO",
-    className: "bg-red-100 text-red-700",
+    default: { label: "EM REUNIÃO", className: "bg-red-100 text-red-500" },
+    tv: { label: "EM REUNIÃO", className: "bg-red-600 text-white" },
   },
 };
 
-export default function StatusBadge({ status }: StatusBadgeProps) {
-  const { label, className } = statusConfig[status];
+export default function StatusBadge({ status, variant = "default" }: StatusBadgeProps) {
+  const { label, className } = statusConfig[status][variant];
 
   return (
     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${className}`}>
