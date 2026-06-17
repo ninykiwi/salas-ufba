@@ -9,7 +9,7 @@ interface StatusBadgeProps {
 const statusConfig: Record<Status, Record<Variant, { label: string; className: string }>> = {
   OCUPADA: {
     default: { label: "OCUPADA", className: "bg-indigo-900 text-white" },
-    tv: { label: "OCUPADA", className: "bg-red-600 text-white" },
+    tv: { label: "OCUPADA", className: "bg-red-700 text-white" },
   },
   LIVRE: {
     default: { label: "LIVRE", className: "bg-gray-200 text-gray-600" },
@@ -17,7 +17,7 @@ const statusConfig: Record<Status, Record<Variant, { label: string; className: s
   },
   EM_REUNIAO: {
     default: { label: "EM REUNIÃO", className: "bg-red-100 text-red-500" },
-    tv: { label: "EM REUNIÃO", className: "bg-red-600 text-white" },
+    tv: { label: "EM REUNIÃO", className: "bg-red-700 text-white" },
   },
 };
 
