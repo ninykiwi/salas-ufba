@@ -16,4 +16,13 @@ describe("StatusBadge", () => {
     render(<StatusBadge status="EM_REUNIAO" />);
     expect(screen.getByText("EM REUNIÃO")).toBeInTheDocument();
   });
+  it("renderiza variante tv para OCUPADA", () => {
+  render(<StatusBadge status="OCUPADA" variant="tv" />);
+  expect(screen.getByText("OCUPADA")).toHaveClass("bg-red-600");
+  });
+
+  it("renderiza variante tv para LIVRE", () => {
+    render(<StatusBadge status="LIVRE" variant="tv" />);
+    expect(screen.getByText("LIVRE")).toHaveClass("bg-gray-500");
+  });
 });
