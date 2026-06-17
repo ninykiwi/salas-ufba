@@ -34,9 +34,6 @@ const allRooms: Room[][] = [
   ],
 ];
 
-const ROOMS_PER_PAGE = 6;
-const TOTAL_ROOMS = 420;
-
 export default function ViewPage() {
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -45,8 +42,6 @@ export default function ViewPage() {
   }, []);
 
   const rooms = allRooms[currentPage];
-  const startRoom = currentPage * ROOMS_PER_PAGE + 101;
-  const endRoom = startRoom + ROOMS_PER_PAGE - 1;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col px-8 py-6 gap-6">
@@ -64,9 +59,6 @@ export default function ViewPage() {
       <ViewFooter
         currentPage={currentPage}
         totalPages={allRooms.length}
-        startRoom={startRoom}
-        endRoom={endRoom}
-        totalRooms={TOTAL_ROOMS}
         onNext={handleNext}
       />
     </div>
