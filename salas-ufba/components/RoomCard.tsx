@@ -54,12 +54,12 @@ export default function RoomCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[#000666] font-semibold text-base">{name}</h2>
+        <h2 className="text-[#000666] font-semibold text-lg">{name}</h2>
         <StatusBadge status={status} />
       </div>
 
       {isOccupied && currentEvent && eventStyle ? (
-        <div className={`rounded-lg p-3 ${eventStyle.wrapper} ${eventStyle.borderColor}`}>
+        <div className={`p-3 ${eventStyle.wrapper} ${eventStyle.borderColor}`}>
           <p className={`text-xs font-semibold uppercase tracking-wide ${eventStyle.label}`}>
             {eventStyle.labelText}
           </p>
@@ -74,12 +74,12 @@ export default function RoomCard({
           </div>
         </div>
       ) : (
-        <div className="rounded-lg p-3 bg-gray-50 flex flex-col gap-1 border-l-4 border-gray-300">
+        <div className="p-3 bg-gray-50 flex flex-col gap-1 border-l-4 border-gray-300">
           <div className="flex items-center gap-2 text-gray-400">
             <CalendarDays size={16} />
             <span className="text-xs font-semibold uppercase tracking-wide">Disponível</span>
           </div>
-          <p className="font-bold text-sm text-gray-700">Sala Livre</p>
+          <p className="font-bold text-xl text-gray-600">Sala Livre</p>
           <p className="text-xs text-gray-400">
             {freeUntil ? `Livre até as ${freeUntil}` : "Sem atividades no momento"}
           </p>

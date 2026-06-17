@@ -23,7 +23,7 @@ const cardAccent: Record<RoomStatus, string> = {
 };
 
 const contentAccent: Record<RoomStatus, string> = {
-  OCUPADA: "border-l-4 border-l-indigo-900",
+  OCUPADA: "border-l-4 border-[#000666]",
   EM_REUNIAO: "border-l-4 border-l-red-400",
   LIVRE: "border-l-4 border-l-gray-300",
 };
