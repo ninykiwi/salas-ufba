@@ -17,9 +17,9 @@ interface ViewRoomCardProps {
 }
 
 const cardAccent: Record<RoomStatus, string> = {
-  OCUPADA: "border-t-4 border-t-red-600",
-  EM_REUNIAO: "border-t-4 border-t-red-600",
-  LIVRE: "border-t-4 border-t-gray-400",
+  OCUPADA: "bg-red-700",
+  EM_REUNIAO: "bg-red-700",
+  LIVRE: "bg-gray-400",
 };
 
 const contentAccent: Record<RoomStatus, string> = {
@@ -32,7 +32,8 @@ export default function ViewRoomCard({ name, status, currentEvent, freeLabel }: 
   const isOccupied = status === "OCUPADA" || status === "EM_REUNIAO";
 
   return (
-    <div className={`bg-white rounded-xl border border-gray-400 ${cardAccent[status]} p-5 flex flex-col justify-evenly gap-4`}>
+    <div className={`bg-white relative overflow-hidden rounded-xl border border-gray-400 p-5 flex flex-col justify-evenly gap-4`}>
+      <div className={`absolute top-0 left-0 right-0 h-[7px] ${cardAccent[status]}`}/>      
       <div className="flex items-center justify-between">
         <h2 className={`font-bold text-2xl ${isOccupied ? "text-indigo-900" : "text-gray-500"}`}>
           {name}

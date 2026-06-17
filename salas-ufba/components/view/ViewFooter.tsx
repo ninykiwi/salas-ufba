@@ -5,9 +5,6 @@ import { useEffect, useState } from "react";
 interface ViewFooterProps {
   currentPage: number;
   totalPages: number;
-  startRoom: number;
-  endRoom: number;
-  totalRooms: number;
   onNext: () => void;
 }
 
@@ -17,9 +14,6 @@ const TICK_MS = 100;
 export default function ViewFooter({
   currentPage,
   totalPages,
-  startRoom,
-  endRoom,
-  totalRooms,
   onNext,
 }: ViewFooterProps) {
   const [elapsed, setElapsed] = useState(0);
@@ -60,7 +54,7 @@ export default function ViewFooter({
             ))}
           </div>
           <span className="text-sm text-gray-500">
-            Exibindo Salas {startRoom} - {endRoom} de {totalRooms}
+            Exibindo Página {currentPage + 1} de {totalPages}
           </span>
         </div>
 
