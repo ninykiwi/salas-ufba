@@ -113,6 +113,7 @@ return (
                   Acompanhe a disponibilidade das salas do IC.
                 </p>
               </div>
+              
               <div className="grid grid-cols-3 border border-gray-200 rounded-lg overflow-hidden bg-white">
                 {(["TODAS", "LIVRES", "OCUPADAS"] as StatusFilter[]).map((f) => (
                   <button
