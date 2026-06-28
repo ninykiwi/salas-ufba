@@ -76,10 +76,12 @@ export default function LoginPage() {
                 <span className="text-sm text-gray-600">Manter conectado neste dispositivo</span>
               </label>
 
-              <button className="flex items-center justify-center gap-2 w-full bg-[#000666] hover:bg-[#333784] text-white font-bold text-sm py-3.5 rounded-lg transition-colors">
-                LOGIN
-                <LogIn size={16} />
-              </button>
+              <Link href="/admin">
+                <button className="flex items-center justify-center gap-2 w-full bg-[#000666] hover:bg-[#333784] text-white font-bold text-sm py-3.5 rounded-lg transition-colors">
+                  LOGIN
+                  <LogIn size={16} />
+                </button>
+              </Link>
             </div>
 
             <div className="border-t border-gray-200 mt-6 pt-6 text-center">

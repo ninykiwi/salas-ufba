@@ -1,4 +1,4 @@
-import { LayoutGrid, CalendarDays, Map, Monitor } from "lucide-react";
+import { LayoutGrid, ClipboardClock, UserPlus, Monitor } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -9,18 +9,17 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Ocupação em Tempo Real", href: "/", icon: <LayoutGrid size={18} /> },
-  { label: "Agenda Completa", href: "/agenda", icon: <CalendarDays size={18} /> },
-  { label: "Mapa do Campus", href: "/mapa", icon: <Map size={18} /> },
+  { label: "Visão Geral", href: "/admin", icon: <LayoutGrid size={18} /> },
+  { label: "Gestão de Salas", href: "/salas", icon: <ClipboardClock size={18} /> },
+  { label: "Gestão de Usuários", href: "/usuarios", icon: <UserPlus size={18} /> },
   { label: "TV Display", href: "/view", icon: <Monitor size={18} /> },
-
 ];
 
-interface SidebarProps {
+interface AdminSidebarProps {
   activeHref?: string;
 }
 
-export default function Sidebar({ activeHref = "/" }: SidebarProps) {
+export default function AdminSidebar({ activeHref = "/" }: AdminSidebarProps) {
   return (
     <aside className="w-60 h-full bg-white border-r border-gray-200 flex flex-col">
 
@@ -54,14 +53,6 @@ export default function Sidebar({ activeHref = "/" }: SidebarProps) {
         })}
       </nav>
 
-      <div className="px-4 py-6">
-        <Link
-          href="/login"
-          className="block w-full bg-[#000666] hover:bg-[#333784] text-white text-sm font-bold text-center py-3 rounded-lg transition-colors"
-        >
-          LOGIN
-        </Link>
-      </div>
     </aside>
   );
 }
