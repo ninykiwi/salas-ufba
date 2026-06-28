@@ -87,7 +87,7 @@ const openDelete = (user: Usuario) => { setSelectedUser(user); setIsDeleteOpen(t
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/configuracoes/usuarios" />
+        <AdminSidebar activeHref="/usuarios" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminTopBar />
