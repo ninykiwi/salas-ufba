@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
 import Footer from "@/components/Footer";
-import RoomCard from "@/components/RoomCard";
+import AdminRoomCard from "@/components/admin/AdminRoomCard";
+import { CirclePlus, Pencil, Trash2 } from "lucide-react";
+import Link from "next/link";
+import ProfSidebar from "@/components/professor/ProfSidebar";
+import ProfTopBar from "@/components/professor/ProfTopBar";
 
 type StatusFilter = "TODAS" | "LIVRES" | "OCUPADAS";
 type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
@@ -17,6 +19,16 @@ interface Room {
   nextEvent?: { title: string; time: string };
   capacity: number;
   freeUntil?: string;
+}
+
+interface Evento {
+  id: number;
+  nome: string;
+  tipo: string;
+  sala: string;
+  predio: string;
+  data: string;
+  horario: string;
 }
 
 const rooms: Room[] = [
@@ -75,6 +87,13 @@ const filterMap: Record<StatusFilter, RoomStatus[]> = {
   OCUPADAS: ["OCUPADA", "EM_REUNIAO"],
 };
 
+const mockEventos: Evento[] = [
+  { id: 1, nome: "Aula: Grafos", tipo: "Aula", sala: "SmartClass II", predio: "Instituto de Computação", data: "24 Out", horario: "07:55" },
+  { id: 2, nome: "Reunião Geral IC", tipo: "Reunião", sala: "SmartClass II", predio: "Instituto de Computação", data: "24 Out", horario: "10:00" },
+  { id: 3, nome: "Aula: Lab 1", tipo: "Aula", sala: "Laboratório 1", predio: "Instituto de Computação", data: "24 Out", horario: "11:35" },
+  { id: 4, nome: "Planejamento 2026", tipo: "Reunião", sala: "Sala de Reuniões", predio: "Faculdade de Direito", data: "24 Out", horario: "09:00" },
+];
+
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
 
 const mockInstitutes = [{ id: 1, name: "Instituto de Computação" }, {id: 2, name: "Faculdade de Direito"}];
@@ -89,21 +108,24 @@ export default function Home() {
 
   const filtered = rooms.filter((r) => filterMap[filter].includes(r.status));
 
+  const [tipoFiltro, setTipoFiltro] = useState("Todos");
+  const [salaFiltro, setSalaFiltro] = useState("Todas");
+  const [predioFiltro, setPredioFiltro] = useState("Todos");
+
+  const eventosFiltrados = mockEventos.filter(e => 
+    (tipoFiltro === "Todos" || e.tipo === tipoFiltro) &&
+    (salaFiltro === "Todas" || e.sala === salaFiltro) &&
+    (predioFiltro === "Todos" || e.predio === predioFiltro)
+  );
+
 return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeHref="/" />
+        <ProfSidebar activeHref="/professor" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
 
-          <TopBar
-            campuses={mockCampuses}
-            selectedCampus={selectedCampus}
-            onCampusChange={setSelectedCampus}
-            institutes={mockInstitutes}
-            selectedInstitute={selectedInstitute}
-            onInstituteChange={setSelectedInstitute}
-          />
+          <ProfTopBar />
 
           <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="flex items-start justify-between mb-6">
@@ -133,8 +155,18 @@ return (
 
             <div className="grid grid-cols-3 gap-4">
               {filtered.map((room) => (
-                <RoomCard key={room.id} {...room} />
+                <AdminRoomCard key={room.id} {...room} />
               ))}
+              
+              {/* Add Card */}
+              <Link href="/cadastrar-evento">
+                              <div className="border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center p-6 text-gray-400 hover:border-[#000666] hover:text-[#000666] transition-all cursor-pointer min-h-[300px]">
+                                <div className="text-center justify-center flex flex-col items-center gap-2">
+                                    <CirclePlus size={36}/>
+                                  <p className="font-bold uppercase tracking-wider text-sm">Cadastrar Evento</p>
+                                </div>
+                              </div>
+              </Link>
             </div>
           </main>
         </div>

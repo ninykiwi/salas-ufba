@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MapPin, Building2, ChevronDown, Info, Bell } from "lucide-react";
 
-interface AdminTopBarProps {
+interface ProfTopBarProps {
   campuses: { id: number; name: string }[];
   selectedCampus: number | null;
   onCampusChange: (id: number) => void;
@@ -12,7 +12,7 @@ interface AdminTopBarProps {
   onInstituteChange: (id: number) => void;
 }
 
-export default function AdminTopBar() {
+export default function ProfTopBar() {
 
     const [time, setTime] = useState("");
     const [dateLabel, setDateLabel] = useState("");
@@ -35,7 +35,7 @@ export default function AdminTopBar() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
 
             <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-[#000666]">Painel do Administrador</h2>
+                <h2 className="text-xl font-bold text-[#000666]">Painel do Professor</h2>
             </div>
 
             <div className="flex items-center gap-4">
