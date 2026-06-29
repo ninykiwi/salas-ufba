@@ -54,7 +54,7 @@ export default function Home() {
               <nav className="flex text-sm font-medium text-gray-500 mb-2">
                 <span>Salas</span>
                 <span className="mx-2">/</span>
-                <span className="text-[#000666] font-bold">Cadastro de Sala</span>
+                <span className="text-[#000666] font-bold">Cadastrar Sala</span>
               </nav>
               <h1 className="text-xl font-bold text-gray-900">Novo Registro de Sala</h1>
               <p className="text-sm text-gray-400 mt-1">
