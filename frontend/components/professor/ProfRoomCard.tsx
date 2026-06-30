@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import StatusBadge from "../StatusBradge";
-import AdminSwapRequestModal from "./AdminSwapRequestModal"; // Ajuste o caminho se necessário
+import ProfSwapRequestModal from "./ProfSwapRequestModal"; // Ajuste o caminho se necessário
 import { CalendarDays, Clock, Users, ArrowLeftRight } from "lucide-react";
 import Link from "next/link";
 
@@ -110,11 +110,11 @@ export default function AdminRoomCard({
         <div className="mt-auto bg-gray-50 -mx-5 -mb-5 p-4 flex items-center justify-between border-t border-gray-100 text-xs">
           {status === "LIVRE" ? (
             <>
-              <Link href="/salas/cadastrar-evento">
+							<Link href="/cadastrar-evento">
               <button className="bg-[#000666] text-white px-3 py-2 rounded-lg font-bold text-[10px] uppercase hover:opacity-90 transition-opacity">
                 Solicitar Reserva
               </button>
-              </Link>
+							</Link>
               <button className="text-[#000666] font-bold hover:underline cursor-pointer">
                 Ver Horários
               </button>
@@ -144,7 +144,7 @@ export default function AdminRoomCard({
       </div>
 
       {/* Renderização condicional do modal fora do fluxo do card */}
-      <AdminSwapRequestModal 
+      <ProfSwapRequestModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         roomName={name}

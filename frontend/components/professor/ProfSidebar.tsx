@@ -1,4 +1,4 @@
-import { LayoutGrid, ClipboardClock, UserPlus, Monitor } from "lucide-react";
+import { LayoutGrid, ClipboardClock, UserPlus, Monitor, ClipboardPen } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -10,7 +10,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Visão Geral", href: "/professor", icon: <LayoutGrid size={18} /> },
-  { label: "Cadastrar Eventos", href: "/cadastrar-evento", icon: <ClipboardClock size={18} /> },
+  { label: "Cadastrar Eventos", href: "/cadastrar-evento", icon: <ClipboardPen size={18} /> },
+  { label: "Minhas Solicitações", href: "/minhas-solicitacoes", icon: <ClipboardClock size={18} /> },
   { label: "TV Display", href: "/view", icon: <Monitor size={18} /> },
 ];
 

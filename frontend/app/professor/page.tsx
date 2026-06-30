@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Footer from "@/components/Footer";
-import AdminRoomCard from "@/components/admin/AdminRoomCard";
+import ProfRoomCard from "@/components/professor/ProfRoomCard";
 import { CirclePlus, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import ProfSidebar from "@/components/professor/ProfSidebar";
@@ -155,7 +155,7 @@ return (
 
             <div className="grid grid-cols-3 gap-4">
               {filtered.map((room) => (
-                <AdminRoomCard key={room.id} {...room} />
+                <ProfRoomCard key={room.id} {...room} />
               ))}
               
               {/* Add Card */}

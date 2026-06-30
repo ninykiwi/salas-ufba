@@ -9,13 +9,13 @@ import { CirclePlus } from "lucide-react";
 import Link from "next/link";
 
 const mockRequests: Solicitacao[] = [
-  { id: 1, professor: "Dr. Carlos Alberto", sala: "Sala 102 - Bloco A", horario: "14:00 - 16:00", data: "Hoje, 24 Out", motivo: "Aula Extra" },
-  { id: 2, professor: "Dra. Maria Helena", sala: "Auditório Laranja", horario: "08:30 - 11:30", data: "Amanhã, 25 Out", motivo: "Defesa de Tese" },
-  { id: 3, professor: "Prof. Ricardo Silva", sala: "Sala 101 - Bloco B", horario: "19:00 - 22:00", data: "Hoje, 24 Out", motivo: "Reunião" },
-  { id: 4, professor: "Profa. Ana Costa", sala: "Laboratório 1", horario: "10:00 - 12:00", data: "Amanhã, 25 Out", motivo: "Aula Prática" },
-  { id: 5, professor: "Dr. João Pedro", sala: "Sala 205 - Bloco C", horario: "14:00 - 18:00", data: "26 Out", motivo: "Minicurso" },
-  { id: 6, professor: "Profa. Fernanda Lima", sala: "Auditório Azul", horario: "09:00 - 12:00", data: "27 Out", motivo: "Palestra" },
-  { id: 7, professor: "Prof. Marcos Paulo", sala: "Sala de Reuniões", horario: "15:00 - 16:00", data: "27 Out", motivo: "Orientação" },
+  { id: 1, professor: "Dr. Carlos Alberto", sala: "Sala 102 - Bloco A", horario: "14:00 - 16:00", data: "Hoje, 24 Out", motivo: "Aula Extra", tipo: "NOVA", frequencia: "Única", descricao: "Necessidade de reposição de carga horária para a turma de cálculo." },
+  { id: 2, professor: "Dra. Maria Helena", sala: "Auditório Laranja", horario: "08:30 - 11:30", data: "Amanhã, 25 Out", motivo: "Defesa de Tese", tipo: "EMPRESTIMO", responsavelAtual: "Prof. Jorge Aragão", frequencia: "Única (Pontual)", descricao: "Banca de defesa de doutorado com convidados externos." },
+  { id: 3, professor: "Prof. Ricardo Silva", sala: "Sala 101 - Bloco B", horario: "19:00 - 22:00", data: "Hoje, 24 Out", motivo: "Reunião", tipo: "TROCA", responsavelAtual: "Profa. Cláudia Leitte", frequencia: "Toda Semana (Ter)", descricao: "Permuta permanente de sala devido à necessidade de projetor funcional." },
+  { id: 4, professor: "Profa. Ana Costa", sala: "Laboratório 1", horario: "10:00 - 12:00", data: "Amanhã, 25 Out", motivo: "Aula Prática", tipo: "NOVA", frequencia: "Quinzenal", descricao: "Prática de laboratório de estruturas de dados." },
+  { id: 5, professor: "Dr. João Pedro", sala: "Sala 205 - Bloco C", horario: "14:00 - 18:00", data: "26 Out", motivo: "Minicurso", tipo: "EMPRESTIMO", responsavelAtual: "Dr. Alan Turing", frequencia: "Única", descricao: "Workshop intensivo de introdução ao Next.js e Tailwind CSS." },
+  { id: 6, professor: "Profa. Fernanda Lima", sala: "Auditório Azul", horario: "09:00 - 12:00", data: "27 Out", motivo: "Palestra", tipo: "NOVA", frequencia: "Única", descricao: "Palestra de abertura da semana de computação." },
+  { id: 7, professor: "Prof. Marcos Paulo", sala: "Sala de Reuniões", horario: "15:00 - 16:00", data: "27 Out", motivo: "Orientação", tipo: "TROCA", responsavelAtual: "Profa. Marta Vieira", frequencia: "Única", descricao: "Troca pontual de sala para acomodar atendimento a aluno cadeirante." },
 ];
 
 export default function Home() {
