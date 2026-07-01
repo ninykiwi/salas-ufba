@@ -8,7 +8,7 @@ export class UsersService implements OnModuleInit {
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
-    // 1. Seed default Institute if none exists
+    // 1. Seed default Institute if none exists (re-trigger reload)
     let defaultInstitute = await this.prisma.institute.findFirst();
     if (!defaultInstitute) {
       defaultInstitute = await this.prisma.institute.create({
@@ -162,5 +162,35 @@ export class UsersService implements OnModuleInit {
     // Try siape
     user = await this.findBySiape(identifier);
     return user;
+  }
+
+  async findAllForUser(requester: any): Promise<Omit<User, 'password'>[]> {
+    let users;
+
+    if (requester.role === Role.SUPERADMIN) {
+      users = await this.prisma.user.findMany({
+        include: { institutes: true },
+        orderBy: { name: 'asc' },
+      });
+    } else {
+      const instituteIds = requester.institutes?.map(inst => inst.id) || [];
+      users = await this.prisma.user.findMany({
+        where: {
+          institutes: {
+            some: {
+              id: { in: instituteIds },
+            },
+          },
+        },
+        include: { institutes: true },
+        orderBy: { name: 'asc' },
+      });
+    }
+
+    // Strip passwords
+    return users.map(user => {
+      const { password, ...result } = user;
+      return result;
+    });
   }
 }
