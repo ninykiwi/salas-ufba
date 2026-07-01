@@ -176,6 +176,7 @@ export class UsersService implements OnModuleInit {
       const instituteIds = requester.institutes?.map(inst => inst.id) || [];
       users = await this.prisma.user.findMany({
         where: {
+          role: Role.PROFESSOR,
           institutes: {
             some: {
               id: { in: instituteIds },

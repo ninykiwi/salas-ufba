@@ -345,7 +345,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
       expect(Array.isArray(response.body)).toBe(true);
       // Admin is linked to 'instituto-de-computacao'. The professors are also linked to it.
       expect(response.body.length).toBeGreaterThanOrEqual(2);
-      expect(response.body.every(u => u.role !== 'SUPERADMIN')).toBe(true); // Superadmin is not linked to 'instituto-de-computacao' in tests
+      expect(response.body.every(u => u.role === 'PROFESSOR')).toBe(true); // Admins can only see professors
     });
 
     it('PROFESSOR should fail to list users (403 Forbidden)', async () => {
