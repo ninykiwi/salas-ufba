@@ -8,7 +8,19 @@ export class UsersService implements OnModuleInit {
   constructor(private prisma: PrismaService) {}
 
   async onModuleInit() {
-    // Seed default SUPERADMIN if none exists
+    // 1. Seed default Institute if none exists
+    let defaultInstitute = await this.prisma.institute.findFirst();
+    if (!defaultInstitute) {
+      defaultInstitute = await this.prisma.institute.create({
+        data: {
+          name: 'Instituto de Computação',
+          slug: 'instituto-de-computacao',
+        },
+      });
+      console.log('Default Institute seeded: Instituto de Computação');
+    }
+
+    // 2. Seed default SUPERADMIN if none exists
     const superadminCount = await this.prisma.user.count({
       where: { role: Role.SUPERADMIN },
     });
@@ -23,6 +35,47 @@ export class UsersService implements OnModuleInit {
         },
       });
       console.log('Default SUPERADMIN seeded: superadmin@ufba.br / SuperAdminPassword123');
+    }
+
+    // 3. Seed default ADMIN if none exists
+    const adminCount = await this.prisma.user.count({
+      where: { role: Role.ADMIN },
+    });
+    if (adminCount === 0) {
+      const hashedPassword = await bcrypt.hash('AdminPassword123', 10);
+      await this.prisma.user.create({
+        data: {
+          name: 'Administrador Geral',
+          email: 'admin@ufba.br',
+          password: hashedPassword,
+          role: Role.ADMIN,
+          institutes: {
+            connect: { id: defaultInstitute.id },
+          },
+        },
+      });
+      console.log('Default ADMIN seeded: admin@ufba.br / AdminPassword123');
+    }
+
+    // 4. Seed default PROFESSOR if none exists
+    const professorCount = await this.prisma.user.count({
+      where: { role: Role.PROFESSOR },
+    });
+    if (professorCount === 0) {
+      const hashedPassword = await bcrypt.hash('ProfessorPassword123', 10);
+      await this.prisma.user.create({
+        data: {
+          name: 'Professor de Computação',
+          email: 'professor@ufba.br',
+          siape: '1234567',
+          password: hashedPassword,
+          role: Role.PROFESSOR,
+          institutes: {
+            connect: { id: defaultInstitute.id },
+          },
+        },
+      });
+      console.log('Default PROFESSOR seeded: professor@ufba.br / ProfessorPassword123');
     }
   }
 
