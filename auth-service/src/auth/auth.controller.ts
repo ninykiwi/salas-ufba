@@ -31,9 +31,28 @@ export class AuthController {
       throw new ForbiddenException('Professores não têm permissão para cadastrar usuários');
     }
 
-    // 2. ADMIN can only register PROFESSOR
-    if (requester.role === Role.ADMIN && targetRole !== Role.PROFESSOR) {
-      throw new ForbiddenException('Administradores só podem cadastrar professores');
+    // 2. ADMIN restrictions
+    if (requester.role === Role.ADMIN) {
+      if (targetRole !== Role.PROFESSOR) {
+        throw new ForbiddenException('Administradores só podem cadastrar professores');
+      }
+
+      // Check and enforce institute matching for ADMIN
+      if (body.instituteIds && body.instituteIds.length > 0) {
+        const adminInstituteIds = requester.institutes?.map(inst => inst.id) || [];
+        const hasInvalidAssociation = body.instituteIds.some(
+          id => !adminInstituteIds.includes(id),
+        );
+
+        if (hasInvalidAssociation) {
+          throw new ForbiddenException(
+            'Administradores só podem cadastrar professores associados aos seus próprios institutos',
+          );
+        }
+      } else {
+        // Automatically link professor to the admin's institutes if none specified
+        body.instituteIds = requester.institutes?.map(inst => inst.id) || [];
+      }
     }
 
     // 3. SUPERADMIN can register anyone

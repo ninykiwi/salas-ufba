@@ -42,19 +42,28 @@ export default function CadastrarUsuario() {
       const user = JSON.parse(userStr);
       setCurrentUserRole(user.role);
 
-      // Fetch institutes
-      const fetchInstitutes = async () => {
+      // Fetch or load institutes
+      const loadInstitutes = async () => {
         try {
-          const response = await fetch("http://localhost:3001/institutes", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setInstitutes(data);
-            if (data.length > 0) {
-              setSelectedInstituteId(data[0].id);
+          if (user.role === "SUPERADMIN") {
+            const response = await fetch("http://localhost:3001/institutes", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            if (response.ok) {
+              const data = await response.json();
+              setInstitutes(data);
+              if (data.length > 0) {
+                setSelectedInstituteId(data[0].id);
+              }
+            }
+          } else {
+            // ADMIN can only register teachers inside the institutes they are associated with
+            const adminInsts = user.institutes || [];
+            setInstitutes(adminInsts);
+            if (adminInsts.length > 0) {
+              setSelectedInstituteId(adminInsts[0].id);
             }
           }
         } catch (err) {
@@ -64,7 +73,7 @@ export default function CadastrarUsuario() {
         }
       };
 
-      fetchInstitutes();
+      loadInstitutes();
     } catch (e) {
       router.push("/login");
     }

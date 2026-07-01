@@ -201,6 +201,31 @@ describe('AuthController & InstitutesController (e2e)', () => {
       expect(response.body.institutes[0].id).toBe(instituteId);
     });
 
+    it('ADMIN should FAIL to register a new PROFESSOR associated with an institute they do not manage (403 Forbidden)', async () => {
+      // Create another institute using superadmin
+      const anotherInstRes = await request(app.getHttpServer())
+        .post('/institutes')
+        .set('Authorization', `Bearer ${superadminToken}`)
+        .send({ name: 'Instituto de Direito' })
+        .expect(201);
+      
+      const anotherInstId = anotherInstRes.body.id;
+
+      // Try registering a professor under anotherInstId using ADMIN token (who only manages instituteId)
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Law Prof',
+          email: 'law.prof@ufba.br',
+          password: 'password123',
+          siape: '6655443',
+          role: 'PROFESSOR',
+          instituteIds: [anotherInstId],
+        })
+        .expect(403);
+    });
+
     it('ADMIN should successfully register a new user without role (should default to PROFESSOR)', async () => {
       const noRoleUser = {
         name: 'No Role User',
@@ -295,6 +320,39 @@ describe('AuthController & InstitutesController (e2e)', () => {
       expect(response.body.role).toBe(testProfessor.role);
       expect(response.body.institutes).toHaveLength(1);
       expect(response.body.institutes[0].slug).toBe('instituto-de-computacao');
+    });
+  });
+
+  describe('/users (GET)', () => {
+    it('SUPERADMIN should list all users', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', `Bearer ${superadminToken}`)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      // We have multiple users registered in previous tests: superadmin, testAdmin, testProfessor, testProfessor2, etc.
+      expect(response.body.length).toBeGreaterThanOrEqual(3);
+      expect(response.body[0]).not.toHaveProperty('password');
+    });
+
+    it('ADMIN should list users linked to the same institute', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(Array.isArray(response.body)).toBe(true);
+      // Admin is linked to 'instituto-de-computacao'. The professors are also linked to it.
+      expect(response.body.length).toBeGreaterThanOrEqual(2);
+      expect(response.body.every(u => u.role !== 'SUPERADMIN')).toBe(true); // Superadmin is not linked to 'instituto-de-computacao' in tests
+    });
+
+    it('PROFESSOR should fail to list users (403 Forbidden)', async () => {
+      await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', `Bearer ${professorToken}`)
+        .expect(403);
     });
   });
 });
