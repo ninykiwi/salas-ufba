@@ -25,7 +25,7 @@ export class UsersService implements OnModuleInit {
       where: { role: Role.SUPERADMIN },
     });
     if (superadminCount === 0) {
-      const hashedPassword = await bcrypt.hash('SuperAdminPassword123', 10);
+      const hashedPassword = await bcrypt.hash('SuperAdminPassword123!', 10);
       await this.prisma.user.create({
         data: {
           name: 'Super Administrador',
@@ -34,7 +34,7 @@ export class UsersService implements OnModuleInit {
           role: Role.SUPERADMIN,
         },
       });
-      console.log('Default SUPERADMIN seeded: superadmin@ufba.br / SuperAdminPassword123');
+      console.log('Default SUPERADMIN seeded: superadmin@ufba.br / SuperAdminPassword123!');
     }
 
     // 3. Seed default ADMIN if none exists
@@ -42,7 +42,7 @@ export class UsersService implements OnModuleInit {
       where: { role: Role.ADMIN },
     });
     if (adminCount === 0) {
-      const hashedPassword = await bcrypt.hash('AdminPassword123', 10);
+      const hashedPassword = await bcrypt.hash('AdminPassword123!', 10);
       await this.prisma.user.create({
         data: {
           name: 'Administrador Geral',
@@ -54,7 +54,7 @@ export class UsersService implements OnModuleInit {
           },
         },
       });
-      console.log('Default ADMIN seeded: admin@ufba.br / AdminPassword123');
+      console.log('Default ADMIN seeded: admin@ufba.br / AdminPassword123!');
     }
 
     // 4. Seed default PROFESSOR if none exists
@@ -62,7 +62,7 @@ export class UsersService implements OnModuleInit {
       where: { role: Role.PROFESSOR },
     });
     if (professorCount === 0) {
-      const hashedPassword = await bcrypt.hash('ProfessorPassword123', 10);
+      const hashedPassword = await bcrypt.hash('ProfessorPassword123!', 10);
       await this.prisma.user.create({
         data: {
           name: 'Professor de Computação',
@@ -75,7 +75,7 @@ export class UsersService implements OnModuleInit {
           },
         },
       });
-      console.log('Default PROFESSOR seeded: professor@ufba.br / ProfessorPassword123');
+      console.log('Default PROFESSOR seeded: professor@ufba.br / ProfessorPassword123!');
     }
   }
 

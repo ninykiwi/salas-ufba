@@ -86,6 +86,14 @@ export default function CadastrarUsuario() {
       return;
     }
 
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setError(
+        "A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial (Ex: @$!%*?&)."
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
     setSuccess("");
@@ -207,12 +215,15 @@ export default function CadastrarUsuario() {
                       <input
                         type="password"
                         className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder="Mínimo 8 caracteres (Ex: Senha123!)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={isSubmitting}
                         required
                       />
+                      <span className="text-[10px] text-gray-400 block mt-1">
+                        Deve conter pelo menos 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial.
+                      </span>
                     </div>
                     <div className="space-y-2">
                       <label className="font-bold text-sm text-gray-700">Associar a um Instituto</label>
