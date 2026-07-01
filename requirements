@@ -1,4 +1,8 @@
 # Requisitos do sistema para rodar o projeto localmente
 node
 npm
+docker
+docker-compose
 frontend-dependencies
+backend-dependencies
+database-migrations
