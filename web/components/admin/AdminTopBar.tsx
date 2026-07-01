@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, Info } from "lucide-react";
-import NotificationsModal from "./NotificationsModal"; // Ajuste o caminho se necessário
+import { Bell, Info, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import NotificationsModal from "./NotificationsModal";
 
 export default function AdminTopBar() {
     const [time, setTime] = useState("");
     const [dateLabel, setDateLabel] = useState("");
+    const [user, setUser] = useState<any>(null);
+    const router = useRouter();
     
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
@@ -18,6 +21,16 @@ export default function AdminTopBar() {
     ]);
 
     useEffect(() => {
+        // Load user from localStorage on client side
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user session", e);
+            }
+        }
+
         const update = () => {
             const now = new Date();
             setTime(now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
@@ -40,17 +53,37 @@ export default function AdminTopBar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const handleLogout = () => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+        router.push("/login");
+    };
 
     return (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
 
             <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-[#000666]">Painel do Administrador</h2>
+                <h2 className="text-xl font-bold text-[#000666]">
+                    {user?.role === "SUPERADMIN" ? "Painel de Superadministrador" : "Painel do Administrador"}
+                </h2>
             </div>
 
             <div className="flex items-center gap-4">
                 
-                <div className="text-right mr-2">
+                {user && (
+                    <div className="text-right mr-2 flex flex-col items-end">
+                        <p className="text-sm font-bold text-gray-800 leading-none">{user.name}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1.5 ${
+                            user.role === 'SUPERADMIN' 
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                                : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                        }`}>
+                            {user.role}
+                        </span>
+                    </div>
+                )}
+
+                <div className="text-right mr-2 border-l border-gray-200 pl-4">
                     <p className="text-3xl font-bold text-[#000666] leading-none">{time}</p>
                     <p className="text-xs text-gray-700 mt-0.5">{dateLabel}</p>
                 </div>
@@ -94,6 +127,15 @@ export default function AdminTopBar() {
                         </p>
                     </div>
                 </div>
+
+                {/* Botão de Logout */}
+                <button 
+                    onClick={handleLogout}
+                    title="Sair do sistema"
+                    className="text-gray-400 hover:text-red-600 transition-colors focus:outline-none"
+                >
+                    <LogOut size={20} />
+                </button>
                 
             </div>
 
