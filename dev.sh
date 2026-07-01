@@ -97,6 +97,20 @@ else
     echo -e "${GREEN}[OK] Dependências do backend (node_modules) já estão instaladas.${NC}"
 fi
 
+# 6.5. Verificar dependências do API Gateway (node_modules)
+GATEWAY_DIR="/home/magno-macedo/SistemasWeb/salas-ufba/api-gateway"
+if [ ! -d "$GATEWAY_DIR/node_modules" ]; then
+    if ask_permission "Dependências do API Gateway (node_modules)" "cd $GATEWAY_DIR && npm install"; then
+        echo -e "${YELLOW}Instalando dependências do API Gateway...${NC}"
+        (cd "$GATEWAY_DIR" && npm install)
+    else
+        echo -e "${RED}Erro: Dependências do API Gateway são necessárias para rodar o projeto.${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}[OK] Dependências do API Gateway (node_modules) já estão instaladas.${NC}"
+fi
+
 echo -e "\n${GREEN}=== Todos os requisitos foram verificados e atendidos! ===${NC}\n"
 
 # 7. Iniciar o Banco de Dados com Docker Compose
@@ -108,10 +122,15 @@ echo -e "${BLUE}Rodando migrações do banco de dados (Prisma)...${NC}"
 (cd "$BACKEND_DIR" && npx prisma migrate deploy && npx prisma generate)
 
 # 9. Iniciar os servidores
-echo -e "${BLUE}Iniciando o servidor backend (porta 3001) em segundo plano...${NC}"
+echo -e "${BLUE}Iniciando o servidor backend (porta 3002) em segundo plano...${NC}"
 cd "$BACKEND_DIR"
 npm run start:dev > backend.log 2>&1 &
 BACKEND_PID=$!
+
+echo -e "${BLUE}Iniciando o API Gateway (porta 3001) em segundo plano...${NC}"
+cd "$GATEWAY_DIR"
+npm run start:dev > gateway.log 2>&1 &
+GATEWAY_PID=$!
 
 echo -e "${BLUE}Iniciando o servidor frontend (porta 3000) em segundo plano...${NC}"
 cd "$FRONTEND_DIR"
@@ -120,9 +139,10 @@ FRONTEND_PID=$!
 
 # Função para parar os servidores ao encerrar o script
 cleanup() {
-    echo -e "\n${RED}Encerrando os servidores (Frontend PID: $FRONTEND_PID, Backend PID: $BACKEND_PID)...${NC}"
+    echo -e "\n${RED}Encerrando os servidores (Frontend PID: $FRONTEND_PID, Backend PID: $BACKEND_PID, Gateway PID: $GATEWAY_PID)...${NC}"
     kill $FRONTEND_PID 2>/dev/null
     kill $BACKEND_PID 2>/dev/null
+    kill $GATEWAY_PID 2>/dev/null
     exit 0
 }
 trap cleanup SIGINT SIGTERM
@@ -132,8 +152,9 @@ echo -e "${YELLOW}Aguardando os servidores iniciarem...${NC}"
 # Loop para aguardar as portas ficarem disponíveis
 for i in {1..30}; do
     if (lsof -i :3000 -t &> /dev/null || curl -s http://localhost:3000 &> /dev/null) && \
-       (lsof -i :3001 -t &> /dev/null || curl -s http://localhost:3001/auth/me &> /dev/null); then
-        echo -e "${GREEN}Servidores iniciados com sucesso!${NC}"
+       (lsof -i :3001 -t &> /dev/null) && \
+       (lsof -i :3002 -t &> /dev/null); then
+        echo -e "${GREEN}Servidores e Gateway iniciados com sucesso!${NC}"
         break
     fi
     sleep 1
@@ -150,5 +171,6 @@ else
 fi
 
 # Manter o script ativo mostrando os logs do Next.js e do NestJS
-echo -e "${GREEN} logs do Backend salvos em: $BACKEND_DIR/backend.log${NC}"
+echo -e "${GREEN}Logs do Backend salvos em: $BACKEND_DIR/backend.log${NC}"
+echo -e "${GREEN}Logs do Gateway salvos em: $GATEWAY_DIR/gateway.log${NC}"
 wait $FRONTEND_PID

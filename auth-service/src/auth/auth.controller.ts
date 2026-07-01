@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, UnauthorizedException, ForbiddenException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, UnauthorizedException, ForbiddenException, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Role } from '@prisma/client';
@@ -23,6 +23,14 @@ export class AuthController {
   ) {
     const requester = req.user;
     
+    // Validate password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
+    if (!body.password || !passwordRegex.test(body.password)) {
+      throw new BadRequestException(
+        'A senha não atende aos requisitos de complexidade: mínimo de 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial.',
+      );
+    }
+
     // Default to PROFESSOR if no role is provided
     const targetRole = body.role || Role.PROFESSOR;
 

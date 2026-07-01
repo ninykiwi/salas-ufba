@@ -16,13 +16,13 @@ describe('AuthController & InstitutesController (e2e)', () => {
 
   const defaultSuperadmin = {
     email: 'superadmin@ufba.br',
-    password: 'SuperAdminPassword123',
+    password: 'SuperAdminPassword123!',
   };
 
   const testAdmin = {
     name: 'Admin Test',
     email: 'admin.test@ufba.br',
-    password: 'adminpassword123',
+    password: 'AdminPassword123!',
     role: 'ADMIN',
   };
 
@@ -30,7 +30,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
     name: 'Prof. Test',
     email: 'prof.test@ufba.br',
     siape: '9999999',
-    password: 'password123',
+    password: 'Password123!',
     role: 'PROFESSOR',
   };
 
@@ -38,7 +38,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
     name: 'Prof. Test 2',
     email: 'prof.test2@ufba.br',
     siape: '8888888',
-    password: 'password123',
+    password: 'Password123!',
     role: 'PROFESSOR',
   };
 
@@ -105,7 +105,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
         .send({
           name: 'Temp Admin',
           email: 'temp.admin@ufba.br',
-          password: 'password123',
+          password: 'Password123!',
           role: 'ADMIN',
         })
         .expect(201);
@@ -114,7 +114,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
         .post('/auth/login')
         .send({
           email: 'temp.admin@ufba.br',
-          password: 'password123',
+          password: 'Password123!',
         })
         .expect(200);
       const tempToken = loginRes.body.access_token;
@@ -218,7 +218,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
         .send({
           name: 'Law Prof',
           email: 'law.prof@ufba.br',
-          password: 'password123',
+          password: 'Password123!',
           siape: '6655443',
           role: 'PROFESSOR',
           instituteIds: [anotherInstId],
@@ -230,7 +230,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
       const noRoleUser = {
         name: 'No Role User',
         email: 'norole.user@ufba.br',
-        password: 'password123',
+        password: 'Password123!',
       };
 
       const response = await request(app.getHttpServer())
@@ -247,7 +247,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
       const anotherAdmin = {
         name: 'Another Admin',
         email: 'another.admin@ufba.br',
-        password: 'password123',
+        password: 'Password123!',
         role: 'ADMIN',
       };
 
@@ -262,7 +262,7 @@ describe('AuthController & InstitutesController (e2e)', () => {
       const someProf = {
         name: 'Some Prof',
         email: 'some.prof@ufba.br',
-        password: 'password123',
+        password: 'Password123!',
         role: 'PROFESSOR',
       };
 
