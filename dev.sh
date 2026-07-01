@@ -70,7 +70,7 @@ else
 fi
 
 # 5. Verificar dependências do frontend (node_modules)
-FRONTEND_DIR="/home/magno-macedo/SistemasWeb/salas-ufba/frontend"
+FRONTEND_DIR="/home/magno-macedo/SistemasWeb/salas-ufba/web"
 if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
     if ask_permission "Dependências do frontend (node_modules)" "cd $FRONTEND_DIR && npm install"; then
         echo -e "${YELLOW}Instalando dependências do frontend...${NC}"
