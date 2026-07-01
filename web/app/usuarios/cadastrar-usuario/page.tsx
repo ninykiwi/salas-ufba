@@ -19,7 +19,7 @@ export default function CadastrarUsuario() {
   const [siape, setSiape] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"PROFESSOR" | "ADMIN">("PROFESSOR");
-  const [selectedInstituteId, setSelectedInstituteId] = useState("");
+  const [selectedInstituteIds, setSelectedInstituteIds] = useState<string[]>([]);
   
   const [currentUserRole, setCurrentUserRole] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +55,7 @@ export default function CadastrarUsuario() {
               const data = await response.json();
               setInstitutes(data);
               if (data.length > 0) {
-                setSelectedInstituteId(data[0].id);
+                setSelectedInstituteIds([data[0].id]);
               }
             }
           } else {
@@ -63,7 +63,7 @@ export default function CadastrarUsuario() {
             const adminInsts = user.institutes || [];
             setInstitutes(adminInsts);
             if (adminInsts.length > 0) {
-              setSelectedInstituteId(adminInsts[0].id);
+              setSelectedInstituteIds([adminInsts[0].id]);
             }
           }
         } catch (err) {
@@ -106,7 +106,7 @@ export default function CadastrarUsuario() {
       password,
       role,
       siape: siape ? siape.trim() : undefined,
-      instituteIds: selectedInstituteId ? [selectedInstituteId] : [],
+      instituteIds: selectedInstituteIds,
     };
 
     try {
@@ -130,6 +130,7 @@ export default function CadastrarUsuario() {
       setSiape("");
       setPassword("");
       setRole("PROFESSOR");
+      setSelectedInstituteIds(institutes.length > 0 ? [institutes[0].id] : []);
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro ao cadastrar o usuário.");
@@ -226,26 +227,36 @@ export default function CadastrarUsuario() {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700">Associar a um Instituto</label>
+                      <label className="font-bold text-sm text-gray-700">Associar a Institutos / Prédios</label>
                       {isLoading ? (
                         <div className="flex items-center gap-2 h-11 text-xs text-gray-400">
                           <Loader2 size={16} className="animate-spin" />
                           <span>Carregando institutos...</span>
                         </div>
                       ) : (
-                        <select
-                          className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
-                          value={selectedInstituteId}
-                          onChange={(e) => setSelectedInstituteId(e.target.value)}
-                          disabled={isSubmitting}
-                        >
-                          <option value="">Nenhum</option>
+                        <div className="border border-gray-300 rounded p-3 text-sm focus-within:ring-1 focus-within:ring-[#000666] focus-within:border-[#000666] outline-none max-h-40 overflow-y-auto space-y-2 bg-white">
                           {institutes.map((inst) => (
-                            <option key={inst.id} value={inst.id}>
-                              {inst.name}
-                            </option>
+                            <label key={inst.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={selectedInstituteIds.includes(inst.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedInstituteIds([...selectedInstituteIds, inst.id]);
+                                  } else {
+                                    setSelectedInstituteIds(selectedInstituteIds.filter((id) => id !== inst.id));
+                                  }
+                                }}
+                                disabled={isSubmitting}
+                                className="w-4 h-4 text-[#000666] accent-[#000666] rounded"
+                              />
+                              <span className="text-gray-700">{inst.name}</span>
+                            </label>
                           ))}
-                        </select>
+                          {institutes.length === 0 && (
+                            <span className="text-xs text-gray-400">Nenhum instituto disponível</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
