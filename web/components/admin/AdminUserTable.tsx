@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 
 export interface Usuario {
-  id: number;
+  id: string | number;
   nome: string;
   iniciais: string;
   email: string;

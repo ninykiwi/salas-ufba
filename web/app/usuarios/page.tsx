@@ -1,34 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminUserTable, { Usuario } from "@/components/admin/AdminUserTable";
 import AdminUserModals from "@/components/admin/AdminUserModals";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const mockInstitutes = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
-];
-
-const mockUsers: Usuario[] = [
-  { id: 1, nome: "Rodrigo Lima", iniciais: "RL", email: "rodrigo.lima@ufba.br", siape: "1029384", funcao: "ADMINISTRADOR", departamento: "Depto. de Ciência da Computação", ultimoAcesso: "HOJE" },
-  { id: 2, nome: "Ana Silva", iniciais: "AS", email: "ana.silva@ufba.br", siape: "2283741", funcao: "PROFESSOR", departamento: "Depto. de Matemática", ultimoAcesso: "2 DIAS ATRÁS" },
-  { id: 3, nome: "Marcos Costa", iniciais: "MC", email: "m.costa@ufba.br", siape: "1982736", funcao: "PROFESSOR", departamento: "Depto. de Ciência da Computação", ultimoAcesso: "ONTEM" },
-  { id: 4, nome: "Carla Mendes", iniciais: "CM", email: "carla.mendes@ufba.br", siape: "3482711", funcao: "PROFESSOR", departamento: "Depto. de Física", ultimoAcesso: "HOJE" },
-  { id: 5, nome: "João Pedro", iniciais: "JP", email: "joao.pedro@ufba.br", siape: "9384756", funcao: "ADMINISTRADOR", departamento: "Depto. de Ciência da Computação", ultimoAcesso: "5 DIAS ATRÁS" },
-  { id: 6, nome: "Fernanda Lima", iniciais: "FL", email: "f.lima@ufba.br", siape: "2233445", funcao: "PROFESSOR", departamento: "Depto. de Estatística", ultimoAcesso: "HOJE" },
-  { id: 7, nome: "Lucas Alves", iniciais: "LA", email: "lucas.alves@ufba.br", siape: "5566778", funcao: "PROFESSOR", departamento: "Depto. de Ciência da Computação", ultimoAcesso: "ONTEM" },
-];
+import { useRouter } from "next/navigation";
 
 export default function GestaoUsuarios() {
   // Estados para controle dos Modais
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+
+  const [users, setUsers] = useState<Usuario[]>([]);
+  const [institutes, setInstitutes] = useState<{ id: string; name: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const usersRes = await fetch("http://localhost:3001/users", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!usersRes.ok) {
+          if (usersRes.status === 401 || usersRes.status === 403) {
+            router.push("/login");
+            return;
+          }
+          throw new Error("Erro ao carregar usuários");
+        }
+
+        const usersData = await usersRes.json();
+
+        // Fetch institutes for the modals dropdown
+        const instsRes = await fetch("http://localhost:3001/institutes", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (instsRes.ok) {
+          const instsData = await instsRes.json();
+          setInstitutes(instsData);
+        }
+
+        const mapped = usersData.map((user: any) => {
+          const initials = user.name
+            .split(" ")
+            .filter(Boolean)
+            .map((n: string) => n[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase() || "U";
+
+          const funcao = (user.role === "SUPERADMIN" || user.role === "ADMIN") 
+            ? "ADMINISTRADOR" 
+            : "PROFESSOR";
+
+          const departamento = user.institutes?.map((inst: any) => inst.name).join(", ") || "Sem instituto";
+
+          return {
+            id: user.id,
+            nome: user.name,
+            iniciais: initials,
+            email: user.email,
+            siape: user.siape || "N/A",
+            funcao: funcao,
+            departamento: departamento,
+            ultimoAcesso: "N/A",
+          };
+        });
+
+        setUsers(mapped);
+      } catch (err: any) {
+        setError(err.message || "Erro de conexão com o servidor.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const openEdit = (user: Usuario) => {
     setSelectedUser(user);
@@ -68,11 +135,22 @@ export default function GestaoUsuarios() {
             </div>
 
             {/* Tabela Separada */}
-            <AdminUserTable 
-              users={mockUsers} 
-              onEdit={openEdit} 
-              onDelete={openDelete} 
-            />
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
+                <Loader2 className="animate-spin text-[#000666]" size={36} />
+                <p className="text-sm">Carregando usuários...</p>
+              </div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4 text-sm font-semibold max-w-md mx-auto mt-10">
+                {error}
+              </div>
+            ) : (
+              <AdminUserTable 
+                users={users} 
+                onEdit={openEdit} 
+                onDelete={openDelete} 
+              />
+            )}
 
           </main>
         </div>
@@ -85,7 +163,7 @@ export default function GestaoUsuarios() {
         onCloseEdit={() => setIsEditOpen(false)}
         onCloseDelete={() => setIsDeleteOpen(false)}
         selectedUser={selectedUser}
-        institutes={mockInstitutes}
+        institutes={institutes}
       />
 
       <Footer />

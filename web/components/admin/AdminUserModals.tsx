@@ -3,7 +3,7 @@
 import { Usuario } from "./AdminUserTable";
 
 interface InstituteOption {
-  id: number;
+  id: string | number;
   name: string;
 }
 
