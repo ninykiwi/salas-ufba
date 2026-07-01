@@ -355,4 +355,113 @@ describe('AuthController & InstitutesController (e2e)', () => {
         .expect(403);
     });
   });
+
+  describe('/users/:id (PATCH)', () => {
+    let professorUserId: string;
+    let adminUserId: string;
+
+    beforeAll(async () => {
+      // Find a professor and admin to test with
+      const users = await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', `Bearer ${superadminToken}`)
+        .expect(200);
+
+      const prof = users.body.find(u => u.role === 'PROFESSOR');
+      const adm = users.body.find(u => u.role === 'ADMIN');
+      professorUserId = prof.id;
+      adminUserId = adm.id;
+    });
+
+    it('ADMIN should successfully edit a PROFESSOR in the same institute', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/users/${professorUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Professor Editado por Admin',
+        })
+        .expect(200);
+
+      expect(response.body.name).toBe('Professor Editado por Admin');
+    });
+
+    it('ADMIN should FAIL to edit a SUPERADMIN or another ADMIN', async () => {
+      await request(app.getHttpServer())
+        .patch(`/users/${adminUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Tentando Mudar Nome do Admin',
+        })
+        .expect(403);
+    });
+
+    it('ADMIN should FAIL to change role to ADMIN', async () => {
+      await request(app.getHttpServer())
+        .patch(`/users/${professorUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          role: 'ADMIN',
+        })
+        .expect(403);
+    });
+
+    it('PROFESSOR should FAIL to edit any user', async () => {
+      await request(app.getHttpServer())
+        .patch(`/users/${professorUserId}`)
+        .set('Authorization', `Bearer ${professorToken}`)
+        .send({
+          name: 'Prof tentou mudar',
+        })
+        .expect(403);
+    });
+  });
+
+  describe('/users/:id (DELETE)', () => {
+    let deletableProfId: string;
+    let adminUserId: string;
+
+    beforeAll(async () => {
+      // Create a fresh professor to delete
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          name: 'Professor Deletavel',
+          email: 'deletavel@ufba.br',
+          password: 'Password123!',
+          role: 'PROFESSOR',
+          instituteIds: [instituteId],
+        })
+        .expect(201);
+      deletableProfId = response.body.id;
+
+      const users = await request(app.getHttpServer())
+        .get('/users')
+        .set('Authorization', `Bearer ${superadminToken}`)
+        .expect(200);
+
+      adminUserId = users.body.find(u => u.role === 'ADMIN').id;
+    });
+
+    it('PROFESSOR should FAIL to delete a user', async () => {
+      await request(app.getHttpServer())
+        .delete(`/users/${deletableProfId}`)
+        .set('Authorization', `Bearer ${professorToken}`)
+        .expect(403);
+    });
+
+    it('ADMIN should FAIL to delete another ADMIN', async () => {
+      await request(app.getHttpServer())
+        .delete(`/users/${adminUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403);
+    });
+
+    it('ADMIN should successfully delete a PROFESSOR in the same institute', async () => {
+      await request(app.getHttpServer())
+        .delete(`/users/${deletableProfId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(204);
+    });
+  });
 });

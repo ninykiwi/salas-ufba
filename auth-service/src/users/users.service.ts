@@ -143,7 +143,7 @@ export class UsersService implements OnModuleInit {
     });
   }
 
-  async findById(id: string): Promise<Omit<User, 'password'> | null> {
+  async findById(id: string): Promise<(Omit<User, 'password'> & { institutes: any[] }) | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: { institutes: true },
@@ -191,6 +191,63 @@ export class UsersService implements OnModuleInit {
     return users.map(user => {
       const { password, ...result } = user;
       return result;
+    });
+  }
+
+  async update(id: string, data: {
+    name?: string;
+    email?: string;
+    siape?: string;
+    password?: string;
+    role?: Role;
+    instituteIds?: string[];
+  }): Promise<Omit<User, 'password'>> {
+    // Check conflicts
+    if (data.email) {
+      const existingEmail = await this.prisma.user.findFirst({
+        where: { email: data.email, NOT: { id } },
+      });
+      if (existingEmail) {
+        throw new ConflictException('E-mail já cadastrado');
+      }
+    }
+
+    if (data.siape) {
+      const existingSiape = await this.prisma.user.findFirst({
+        where: { siape: data.siape, NOT: { id } },
+      });
+      if (existingSiape) {
+        throw new ConflictException('SIAPE já cadastrado');
+      }
+    }
+
+    const updateData: any = {};
+    if (data.name) updateData.name = data.name;
+    if (data.email) updateData.email = data.email;
+    if (data.siape !== undefined) updateData.siape = data.siape || null;
+    if (data.role) updateData.role = data.role;
+    if (data.password) {
+      updateData.password = await bcrypt.hash(data.password, 10);
+    }
+    if (data.instituteIds) {
+      updateData.institutes = {
+        set: data.instituteIds.map(instId => ({ id: instId })),
+      };
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      include: { institutes: true },
+    });
+
+    const { password, ...result } = user;
+    return result;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.user.delete({
+      where: { id },
     });
   }
 }

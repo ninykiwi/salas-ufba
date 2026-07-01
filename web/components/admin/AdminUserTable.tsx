@@ -12,6 +12,8 @@ export interface Usuario {
   funcao: "ADMINISTRADOR" | "PROFESSOR";
   departamento: string;
   ultimoAcesso: string;
+  role?: string;
+  institutes?: { id: string; name: string }[];
 }
 
 type FilterTab = "Todos" | "Professores" | "Administradores";

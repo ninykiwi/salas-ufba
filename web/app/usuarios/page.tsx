@@ -22,78 +22,80 @@ export default function GestaoUsuarios() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
+  const fetchData = async () => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       router.push("/login");
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        const usersRes = await fetch("http://localhost:3001/users", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    try {
+      const usersRes = await fetch("http://localhost:3001/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        if (!usersRes.ok) {
-          if (usersRes.status === 401 || usersRes.status === 403) {
-            router.push("/login");
-            return;
-          }
-          throw new Error("Erro ao carregar usuários");
+      if (!usersRes.ok) {
+        if (usersRes.status === 401 || usersRes.status === 403) {
+          router.push("/login");
+          return;
         }
-
-        const usersData = await usersRes.json();
-
-        // Fetch institutes for the modals dropdown
-        const instsRes = await fetch("http://localhost:3001/institutes", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (instsRes.ok) {
-          const instsData = await instsRes.json();
-          setInstitutes(instsData);
-        }
-
-        const mapped = usersData.map((user: any) => {
-          const initials = user.name
-            .split(" ")
-            .filter(Boolean)
-            .map((n: string) => n[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase() || "U";
-
-          const funcao = (user.role === "SUPERADMIN" || user.role === "ADMIN") 
-            ? "ADMINISTRADOR" 
-            : "PROFESSOR";
-
-          const departamento = user.institutes?.map((inst: any) => inst.name).join(", ") || "Sem instituto";
-
-          return {
-            id: user.id,
-            nome: user.name,
-            iniciais: initials,
-            email: user.email,
-            siape: user.siape || "N/A",
-            funcao: funcao,
-            departamento: departamento,
-            ultimoAcesso: "N/A",
-          };
-        });
-
-        setUsers(mapped);
-      } catch (err: any) {
-        setError(err.message || "Erro de conexão com o servidor.");
-      } finally {
-        setIsLoading(false);
+        throw new Error("Erro ao carregar usuários");
       }
-    };
 
+      const usersData = await usersRes.json();
+
+      // Fetch institutes for the modals dropdown
+      const instsRes = await fetch("http://localhost:3001/institutes", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (instsRes.ok) {
+        const instsData = await instsRes.json();
+        setInstitutes(instsData);
+      }
+
+      const mapped = usersData.map((user: any) => {
+        const initials = user.name
+          .split(" ")
+          .filter(Boolean)
+          .map((n: string) => n[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase() || "U";
+
+        const funcao = (user.role === "SUPERADMIN" || user.role === "ADMIN") 
+          ? "ADMINISTRADOR" 
+          : "PROFESSOR";
+
+        const departamento = user.institutes?.map((inst: any) => inst.name).join(", ") || "Sem instituto";
+
+        return {
+          id: user.id,
+          nome: user.name,
+          iniciais: initials,
+          email: user.email,
+          siape: user.siape || "N/A",
+          funcao: funcao,
+          departamento: departamento,
+          ultimoAcesso: "N/A",
+          role: user.role,
+          institutes: user.institutes || [],
+        };
+      });
+
+      setUsers(mapped);
+    } catch (err: any) {
+      setError(err.message || "Erro de conexão com o servidor.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [router]);
 
@@ -164,6 +166,7 @@ export default function GestaoUsuarios() {
         onCloseDelete={() => setIsDeleteOpen(false)}
         selectedUser={selectedUser}
         institutes={institutes}
+        onUserUpdated={fetchData}
       />
 
       <Footer />
