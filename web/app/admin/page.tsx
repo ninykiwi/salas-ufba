@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminRoomCard from "@/components/admin/AdminRoomCard";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminEventTable, { Evento } from "@/components/admin/AdminEventTable";

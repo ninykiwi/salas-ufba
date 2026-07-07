@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Info, ShieldCheck, Mail, Loader2, CheckCircle, AlertTriangle, UserPlus } from "lucide-react";
 
@@ -142,7 +142,7 @@ export default function CadastrarUsuario() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/usuarios" />
+        <AdminSidebar activeHref="/super-admin/usuarios" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminTopBar />

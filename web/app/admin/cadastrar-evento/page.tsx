@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Footer from "@/components/Footer";
+import AdminTopBar from "@/components/admin/AdminTopBar";
+import Footer from "@/components/home/Footer";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Info, CheckCircle, Calendar, Clock, Users } from "lucide-react";
-import ProfSidebar from "@/components/professor/ProfSidebar";
-import ProfTopBar from "@/components/professor/ProfTopBar";
 
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
 
@@ -43,13 +43,18 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <ProfSidebar activeHref="/cadastrar" />
+        <AdminSidebar activeHref="/salas" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          <ProfTopBar />
+          <AdminTopBar />
 
           <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="mb-8">
+              <nav className="flex text-sm font-medium text-gray-500 mb-2">
+                <span>Salas</span>
+                <span className="mx-2">/</span>
+                <span className="text-[#000666] font-bold">Cadastrar Evento</span>
+              </nav>
               <h1 className="text-xl font-bold text-gray-900">Nova Solicitação de Reserva</h1>
               <p className="text-sm text-gray-400 mt-1">
                 Preencha os dados técnicos do evento para submeter o pedido à aprovação da coordenação.

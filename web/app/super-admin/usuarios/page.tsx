@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminUserTable, { Usuario } from "@/components/admin/AdminUserTable";
 import AdminUserModals from "@/components/admin/AdminUserModals";
@@ -112,7 +112,7 @@ export default function GestaoUsuarios() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/usuarios" />
+        <AdminSidebar activeHref="/super-admin/usuarios" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminTopBar />
@@ -128,7 +128,7 @@ export default function GestaoUsuarios() {
                 </p>
               </div>
 
-              <Link href="/usuarios/cadastrar-usuario">
+              <Link href="/super-admin/usuarios/cadastrar-usuario">
                 <button className="flex items-center gap-2 px-6 py-3 bg-[#000666] text-white rounded-md font-bold text-sm tracking-wide hover:bg-blue-900 transition-colors shadow-sm">
                   <UserPlus size={18} />
                   NOVO USUÁRIO

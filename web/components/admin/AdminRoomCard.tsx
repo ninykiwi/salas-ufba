@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import StatusBadge from "../StatusBradge";
+import StatusBadge from "../home/StatusBradge";
 import AdminSwapRequestModal from "./AdminSwapRequestModal"; // Ajuste o caminho se necessário
 import { CalendarDays, Clock, Users, ArrowLeftRight } from "lucide-react";
 import Link from "next/link";

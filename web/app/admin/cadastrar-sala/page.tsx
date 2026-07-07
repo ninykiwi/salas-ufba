@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Info, CheckCircle } from "lucide-react";
 

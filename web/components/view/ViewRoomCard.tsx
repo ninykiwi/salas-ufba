@@ -1,4 +1,4 @@
-import StatusBadge from "../StatusBradge";
+import StatusBadge from "../home/StatusBradge";
 
 type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
 

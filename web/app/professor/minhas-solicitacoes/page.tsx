@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ProfTopBar from "@/components/professor/ProfTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import ProfSidebar from "@/components/professor/ProfSidebar";
 import { Clock, CheckCircle2, XCircle, Calendar, MapPin } from "lucide-react";
 

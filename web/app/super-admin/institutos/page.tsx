@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle } from "lucide-react";
 
@@ -110,7 +110,7 @@ export default function GestaoInstitutos() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/institutos" />
+        <AdminSidebar activeHref="/super-admin/institutos" />
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminTopBar />

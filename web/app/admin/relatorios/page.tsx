@@ -1,7 +1,7 @@
 "use client";
 
 import AdminTopBar from "@/components/admin/AdminTopBar";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminDashboardStats from "@/components/admin/AdminDashboardStats";
 import AdminRequestsTable, { Solicitacao } from "@/components/admin/AdminRequestsTable";
@@ -44,7 +44,7 @@ export default function Home() {
 
                 {/* Coluna dos botões mantida na página principal */}
                 <div className="flex flex-col gap-3 h-full">
-                  <Link href="/salas/cadastrar-sala" className="flex-1 block">
+                  <Link href="/admin/cadastrar-sala" className="flex-1 block">
                     <button className="w-full h-full bg-[#000666] p-2 rounded-xl border border-transparent flex flex-col items-center justify-center text-white hover:bg-blue-900 transition-colors shadow-sm gap-2 group">
                       <CirclePlus size={24} className="group-hover:scale-110 transition-transform" />
                       <span className="font-bold text-xs uppercase tracking-wider">
@@ -53,7 +53,7 @@ export default function Home() {
                     </button>
                   </Link>
 
-                  <Link href="/salas/cadastrar-evento" className="flex-1 block">
+                  <Link href="/admin/cadastrar-evento" className="flex-1 block">
                     <button className="w-full h-full bg-[#000666] p-2 rounded-xl border border-transparent flex flex-col items-center justify-center text-white hover:bg-blue-900 transition-colors shadow-sm gap-2 group">
                       <CirclePlus size={24} className="group-hover:scale-110 transition-transform" />
                       <span className="font-bold text-xs uppercase tracking-wider">
