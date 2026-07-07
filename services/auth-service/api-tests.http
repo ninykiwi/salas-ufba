@@ -1,0 +1,88 @@
+### 1. Login como SUPERADMIN Default
+# @name loginSuperAdmin
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "superadmin@ufba.br",
+  "password": "SuperAdminPassword123"
+}
+
+### 2. SUPERADMIN cria um novo Instituto (Sucesso)
+# @name createInstitute
+POST http://localhost:3001/institutes
+Authorization: Bearer {{loginSuperAdmin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Instituto de Computação"
+}
+
+### 3. Listar Institutos cadastrados
+# @name listInstitutes
+GET http://localhost:3001/institutes
+Authorization: Bearer {{loginSuperAdmin.response.body.access_token}}
+
+### 4. SUPERADMIN cria um novo ADMIN associado ao Instituto
+# @name registerAdmin
+POST http://localhost:3001/auth/register
+Authorization: Bearer {{loginSuperAdmin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Admin Computação",
+  "email": "admin.comp@ufba.br",
+  "password": "AdminPassword123",
+  "role": "ADMIN",
+  "instituteIds": ["{{createInstitute.response.body.id}}"]
+}
+
+### 5. Login como o novo ADMIN criado
+# @name loginAdmin
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin.comp@ufba.br",
+  "password": "AdminPassword123"
+}
+
+### 6. ADMIN tenta criar um Instituto (Erro - 403 Forbidden)
+# Apenas SUPERADMIN pode gerir institutos
+POST http://localhost:3001/institutes
+Authorization: Bearer {{loginAdmin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Instituto de Matemática"
+}
+
+### 7. ADMIN cria um novo PROFESSOR associado ao Instituto
+# @name registerProfessor
+POST http://localhost:3001/auth/register
+Authorization: Bearer {{loginAdmin.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "Prof. Roberto Mendes",
+  "email": "roberto.mendes@ufba.br",
+  "siape": "1122334",
+  "password": "ProfessorPassword123",
+  "role": "PROFESSOR",
+  "instituteIds": ["{{createInstitute.response.body.id}}"]
+}
+
+### 8. Login como o PROFESSOR criado
+# @name loginProfessor
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+  "email": "roberto.mendes@ufba.br",
+  "password": "ProfessorPassword123"
+}
+
+### 9. Obter Perfil do Professor Autenticado (Usando seu Token)
+# Note que a resposta retornará a associação com o "Instituto de Computação"
+GET http://localhost:3001/auth/me
+Authorization: Bearer {{loginProfessor.response.body.access_token}}
