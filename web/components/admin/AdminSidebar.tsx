@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LayoutGrid, ClipboardClock, UserPlus, Monitor, Building, Map } from "lucide-react";
+import { LayoutGrid, ClipboardClock, UserPlus, ChartColumn , Building, Map, Logs } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -34,17 +34,16 @@ export default function AdminSidebar({ activeHref = "/" }: AdminSidebarProps) {
   if (user) {
     if (user.role === "SUPERADMIN") {
       navItems.push(
-        { label: "Gestão de Institutos", href: "/institutos", icon: <Building size={18} /> },
-        { label: "Gestão de Usuários", href: "/usuarios", icon: <UserPlus size={18} /> },
-        { label: "TV Display", href: "/view", icon: <Monitor size={18} /> }
+        { label: "Gestão de Institutos", href: "/super-admin/institutos", icon: <Building size={18} /> },
+        { label: "Gestão de Usuários", href: "/super-admin/usuarios", icon: <UserPlus size={18} /> },
+        { label: "Logs do Sistema", href: "/super-user/logs", icon: <Logs size={18} /> }
       );
     } else {
       // ADMIN
       navItems.push(
         { label: "Visão Geral", href: "/admin", icon: <LayoutGrid size={18} /> },
-        { label: "Gestão de Salas", href: "/salas", icon: <ClipboardClock size={18} /> },
-        { label: "Gestão de Usuários", href: "/usuarios", icon: <UserPlus size={18} /> },
-        { label: "TV Display", href: "/view", icon: <Monitor size={18} /> },
+        { label: "Relatórios", href: "/admin/relatorios", icon: <ClipboardClock size={18} /> },
+        { label: "Solicitações", href: "/admin/solicitacoes", icon: <ChartColumn  size={18} /> },
         { label: "Mapear Salas", href: "/admin/cadastrar-mapa", icon: <Map size={18} /> },
       );
     }

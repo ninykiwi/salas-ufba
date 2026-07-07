@@ -11,7 +11,7 @@ export interface Solicitacao {
   horario: string;
   data: string;
   motivo: string;
-  tipo?: "TROCA" | "EMPRESTIMO" | "NOVA";
+  tipo?: "TROCA" | "EMPRESTIMO" | "RESERVA" | "CANCELAMENTO";
   frequencia?: string;          
   responsavelAtual?: string;    
   descricao?: string;           
@@ -71,9 +71,10 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
 
   // Mapeamento visual estético dos Badges de Tipo
   const typeBadges: Record<string, { text: string; classes: string }> = {
-    NOVA: { text: "Nova", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
+    RESERVA: { text: "Reserva", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
     EMPRESTIMO: { text: "Empréstimo", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
     TROCA: { text: "Troca", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
+    CANCELAMENTO: { text: "Cancelamento", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
   };
 
   return (
@@ -87,8 +88,8 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
 
           {/* Lado Direito: Apenas os botões de Filtro */}
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            {(["Todos", "NOVA", "EMPRESTIMO", "TROCA"] as const).map((tab) => {
-              const labelMap = { Todos: "Todos", NOVA: "Novas", EMPRESTIMO: "Empréstimos", TROCA: "Trocas" };
+            {(["Todos", "RESERVA", "EMPRESTIMO", "TROCA", "CANCELAMENTO"] as const).map((tab) => {
+              const labelMap = { Todos: "Todos", RESERVA: "Reservas", EMPRESTIMO: "Empréstimos", TROCA: "Trocas", CANCELAMENTO: "Cancelamentos"};
               return (
                 <button
                   key={tab}
@@ -120,7 +121,7 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
           {currentRequests.length > 0 ? (
             currentRequests.map((req) => {
               // Fallback para caso o objeto não tenha tipo definido no banco/mock
-              const badge = typeBadges[req.tipo || "NOVA"] || typeBadges.NOVA;
+              const badge = typeBadges[req.tipo || "RESERVA"] || typeBadges.RESERVA;
 
               return (
                 <div
