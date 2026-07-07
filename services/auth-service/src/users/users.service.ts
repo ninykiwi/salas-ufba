@@ -1,117 +1,11 @@
-import { Injectable, ConflictException, OnModuleInit } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class UsersService implements OnModuleInit {
+export class UsersService {
   constructor(private prisma: PrismaService) {}
-
-  async onModuleInit() {
-    if (process.env.NODE_ENV === 'production') {
-      return;
-    }
-    await this.seed();
-  }
-
-  private getSeedPassword(envVar: string, defaultValue: string): string {
-    const value = process.env[envVar];
-    if (value) {
-      return value;
-    }
-    console.warn(
-      `[seed] ${envVar} não definida — usando senha padrão de desenvolvimento.`,
-    );
-    return defaultValue;
-  }
-
-  async seed(): Promise<void> {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Seed não pode ser executado em ambiente de produção');
-    }
-
-    // 1. Seed default Institute if none exists (re-trigger reload)
-    let defaultInstitute = await this.prisma.institute.findFirst();
-    if (!defaultInstitute) {
-      defaultInstitute = await this.prisma.institute.create({
-        data: {
-          name: 'Instituto de Computação',
-          slug: 'instituto-de-computacao',
-        },
-      });
-      console.log('Default Institute seeded: Instituto de Computação');
-    }
-
-    // 2. Seed default SUPERADMIN if none exists
-    const superadminCount = await this.prisma.user.count({
-      where: { role: Role.SUPERADMIN },
-    });
-    if (superadminCount === 0) {
-      const password = this.getSeedPassword(
-        'SEED_SUPERADMIN_PASSWORD',
-        'SuperAdminPassword123!',
-      );
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await this.prisma.user.create({
-        data: {
-          name: 'Super Administrador',
-          email: 'superadmin@ufba.br',
-          password: hashedPassword,
-          role: Role.SUPERADMIN,
-        },
-      });
-      console.log('Default SUPERADMIN seeded: superadmin@ufba.br');
-    }
-
-    // 3. Seed default ADMIN if none exists
-    const adminCount = await this.prisma.user.count({
-      where: { role: Role.ADMIN },
-    });
-    if (adminCount === 0) {
-      const password = this.getSeedPassword(
-        'SEED_ADMIN_PASSWORD',
-        'AdminPassword123!',
-      );
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await this.prisma.user.create({
-        data: {
-          name: 'Administrador Geral',
-          email: 'admin@ufba.br',
-          password: hashedPassword,
-          role: Role.ADMIN,
-          institutes: {
-            connect: { id: defaultInstitute.id },
-          },
-        },
-      });
-      console.log('Default ADMIN seeded: admin@ufba.br');
-    }
-
-    // 4. Seed default PROFESSOR if none exists
-    const professorCount = await this.prisma.user.count({
-      where: { role: Role.PROFESSOR },
-    });
-    if (professorCount === 0) {
-      const password = this.getSeedPassword(
-        'SEED_PROFESSOR_PASSWORD',
-        'ProfessorPassword123!',
-      );
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await this.prisma.user.create({
-        data: {
-          name: 'Professor de Computação',
-          email: 'professor@ufba.br',
-          siape: '1234567',
-          password: hashedPassword,
-          role: Role.PROFESSOR,
-          institutes: {
-            connect: { id: defaultInstitute.id },
-          },
-        },
-      });
-      console.log('Default PROFESSOR seeded: professor@ufba.br');
-    }
-  }
 
   async create(data: {
     name: string;

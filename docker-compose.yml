@@ -29,9 +29,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
-      SEED_SUPERADMIN_PASSWORD: ${SEED_SUPERADMIN_PASSWORD}
-      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
-      SEED_PROFESSOR_PASSWORD: ${SEED_PROFESSOR_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
