@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
-import Footer from "@/components/Footer";
-import RoomCard from "@/components/RoomCard";
+import Sidebar from "@/components/home/Sidebar";
+import TopBar from "@/components/home/TopBar";
+import Footer from "@/components/home/Footer";
+import RoomCard from "@/components/home/RoomCard";
 
 type StatusFilter = "TODAS" | "LIVRES" | "OCUPADAS";
 type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";

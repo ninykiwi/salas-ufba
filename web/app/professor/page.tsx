@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import ProfRoomCard from "@/components/professor/ProfRoomCard";
 import { CirclePlus, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -159,7 +159,7 @@ return (
               ))}
               
               {/* Add Card */}
-              <Link href="/cadastrar-evento">
+              <Link href="/professor/cadastrar-evento">
                               <div className="border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center p-6 text-gray-400 hover:border-[#000666] hover:text-[#000666] transition-all cursor-pointer min-h-[300px]">
                                 <div className="text-center justify-center flex flex-col items-center gap-2">
                                     <CirclePlus size={36}/>

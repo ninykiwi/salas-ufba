@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Footer from "@/components/Footer";
+import Footer from "@/components/home/Footer";
 import { Info, CheckCircle, Calendar, Clock, Users } from "lucide-react";
 import ProfSidebar from "@/components/professor/ProfSidebar";
 import ProfTopBar from "@/components/professor/ProfTopBar";

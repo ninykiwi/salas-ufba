@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
-import Footer from "@/components/Footer";
+import Sidebar from "@/components/home/Sidebar";
+import TopBar from "@/components/home/TopBar";
+import Footer from "@/components/home/Footer";
 import { ChevronLeft, ChevronRight, Filter, Clock, X } from "lucide-react";
 
 // --- Interfaces e Mocks ---
