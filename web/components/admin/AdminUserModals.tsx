@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Usuario } from "./AdminUserTable";
 import { Loader2 } from "lucide-react";
+import { updateUser, deleteUser, Role } from "@/lib/api";
 
 interface InstituteOption {
   id: string | number;
@@ -33,7 +34,7 @@ export default function AdminUserModals({
   const [email, setEmail] = useState("");
   const [siape, setSiape] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("PROFESSOR");
+  const [role, setRole] = useState<Role>("PROFESSOR");
   const [selectedInstituteIds, setSelectedInstituteIds] = useState<string[]>([]);
   
   // Controle de Submissão e Erros
@@ -56,7 +57,7 @@ export default function AdminUserModals({
       setEmail(selectedUser.email);
       setSiape(selectedUser.siape === "N/A" ? "" : selectedUser.siape);
       setPassword("");
-      setRole(selectedUser.role || "PROFESSOR");
+      setRole((selectedUser.role as Role) || "PROFESSOR");
       setSelectedInstituteIds(
         selectedUser.institutes?.map((inst) => String(inst.id)) || []
       );
@@ -93,27 +94,14 @@ export default function AdminUserModals({
     setError("");
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/users/${selectedUser?.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          siape: siape.trim() || null,
-          password: password || undefined,
-          role,
-          instituteIds: selectedInstituteIds,
-        }),
+      await updateUser(String(selectedUser?.id), {
+        name,
+        email,
+        siape: siape.trim() || null,
+        password: password || undefined,
+        role,
+        instituteIds: selectedInstituteIds,
       });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Erro ao atualizar usuário");
-      }
 
       onUserUpdated();
       onCloseEdit();
@@ -129,18 +117,7 @@ export default function AdminUserModals({
     setError("");
 
     try {
-      const token = localStorage.getItem("access_token");
-      const res = await fetch(`http://localhost:3001/users/${selectedUser?.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || "Erro ao excluir usuário");
-      }
+      await deleteUser(String(selectedUser?.id));
 
       onUserUpdated();
       onCloseDelete();
@@ -279,7 +256,7 @@ export default function AdminUserModals({
                 {currentUserRole === "SUPERADMIN" ? (
                   <select
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(e.target.value as Role)}
                     className="w-full border border-gray-300 rounded-md p-2 text-sm bg-white focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none"
                   >
                     <option value="PROFESSOR">Professor</option>

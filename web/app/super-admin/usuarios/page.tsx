@@ -9,6 +9,7 @@ import AdminUserModals from "@/components/admin/AdminUserModals";
 import { UserPlus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getUsers, getInstitutes, ApiError } from "@/lib/api";
 
 export default function GestaoUsuarios() {
   // Estados para controle dos Modais
@@ -30,31 +31,11 @@ export default function GestaoUsuarios() {
     }
 
     try {
-      const usersRes = await fetch("http://localhost:3001/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!usersRes.ok) {
-        if (usersRes.status === 401 || usersRes.status === 403) {
-          router.push("/login");
-          return;
-        }
-        throw new Error("Erro ao carregar usuários");
-      }
-
-      const usersData = await usersRes.json();
+      const usersData = await getUsers();
 
       // Fetch institutes for the modals dropdown
-      const instsRes = await fetch("http://localhost:3001/institutes", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (instsRes.ok) {
-        const instsData = await instsRes.json();
+      const instsData = await getInstitutes().catch(() => null);
+      if (instsData) {
         setInstitutes(instsData);
       }
 
@@ -67,9 +48,10 @@ export default function GestaoUsuarios() {
           .join("")
           .toUpperCase() || "U";
 
-        const funcao = (user.role === "SUPERADMIN" || user.role === "ADMIN") 
-          ? "ADMINISTRADOR" 
-          : "PROFESSOR";
+        const funcao: "ADMINISTRADOR" | "PROFESSOR" =
+          user.role === "SUPERADMIN" || user.role === "ADMIN"
+            ? "ADMINISTRADOR"
+            : "PROFESSOR";
 
         const departamento = user.institutes?.map((inst: any) => inst.name).join(", ") || "Sem instituto";
 
@@ -89,6 +71,10 @@ export default function GestaoUsuarios() {
 
       setUsers(mapped);
     } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        router.push("/login");
+        return;
+      }
       setError(err.message || "Erro de conexão com o servidor.");
     } finally {
       setIsLoading(false);

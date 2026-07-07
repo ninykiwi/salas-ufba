@@ -6,6 +6,7 @@ import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Info, ShieldCheck, Mail, Loader2, CheckCircle, AlertTriangle, UserPlus } from "lucide-react";
+import { getInstitutes, createUser } from "@/lib/api";
 
 interface Institute {
   id: string;
@@ -46,17 +47,10 @@ export default function CadastrarUsuario() {
       const loadInstitutes = async () => {
         try {
           if (user.role === "SUPERADMIN") {
-            const response = await fetch("http://localhost:3001/institutes", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-            if (response.ok) {
-              const data = await response.json();
-              setInstitutes(data);
-              if (data.length > 0) {
-                setSelectedInstituteIds([data[0].id]);
-              }
+            const data = await getInstitutes();
+            setInstitutes(data);
+            if (data.length > 0) {
+              setSelectedInstituteIds([data[0].id]);
             }
           } else {
             // ADMIN can only register teachers inside the institutes they are associated with
@@ -98,31 +92,15 @@ export default function CadastrarUsuario() {
     setError("");
     setSuccess("");
 
-    const token = localStorage.getItem("access_token");
-
-    const payload = {
-      name,
-      email,
-      password,
-      role,
-      siape: siape ? siape.trim() : undefined,
-      instituteIds: selectedInstituteIds,
-    };
-
     try {
-      const response = await fetch("http://localhost:3001/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+      await createUser({
+        name,
+        email,
+        password,
+        role,
+        siape: siape ? siape.trim() : undefined,
+        instituteIds: selectedInstituteIds,
       });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || "Erro ao registrar usuário");
-      }
 
       setSuccess("Usuário cadastrado com sucesso!");
       setName("");

@@ -1,51 +1,60 @@
 # salas-ufba
 Trabalho final da disciplina de sistemas web 2026.1 da universidade federal da bahia
 
+## Estrutura de Pastas
+
+```
+/
+  services/
+    auth-service/   # NestJS - autenticação, usuários e institutos (porta 3002)
+    api-gateway/     # NestJS - proxy/gateway para o auth-service (porta 3001)
+    bff/             # FastAPI - Backend For Frontend consumido pelo web (porta 8000)
+  web/               # Next.js - frontend (porta 3000)
+  infra/             # docker-compose auxiliar (apenas postgres, uso standalone)
+  docker-compose.yml # orquestra todos os serviços acima
+  .env.example       # todas as variáveis de ambiente de todos os serviços
+```
+
+## Pré-requisitos
+
+- Docker
+- Docker Compose
+
 ## Como Rodar o Projeto
 
-> [!NOTE]
-> Como este projeto foi recém-clonado, a pasta `node_modules` (onde ficam as dependências locais como React e Next.js) **não está presente** pois é ignorada pelo Git (`.gitignore`).
-> Por conta disso, na primeira execução, tanto o script automatizado quanto o método manual solicitarão/exigirão a execução do comando `npm install` na pasta `frontend` para instalar essas dependências.
->
-> Após essa primeira instalação, o projeto rodará diretamente nas próximas vezes.
-
-Você pode rodar a aplicação de duas formas: utilizando o script automatizado de desenvolvimento ou manualmente passo a passo.
-
----
-
-### Método 1: Utilizando o Script Automatizado (Recomendado)
-
-O script `dev.sh` verifica as dependências necessárias, instala o que estiver faltando (perguntando a você antes) e inicia o servidor abrindo a aplicação direto no seu navegador.
-
-1. Garanta que o script tem permissão de execução:
+1. Copie o `.env.example` da raiz para `.env` e preencha as variáveis sensíveis:
    ```bash
-   chmod +x dev.sh
+   cp .env.example .env
+   ```
+   Um único `.env` na raiz concentra as variáveis de todos os serviços (postgres, auth-service, api-gateway, bff e web) - o Docker Compose já lê esse arquivo automaticamente. Não há mais `.env` individuais dentro de `services/*`.
+
+2. Suba todos os serviços com Docker Compose:
+   ```bash
+   docker compose up --build
    ```
 
-2. Execute o script:
-   ```bash
-   ./dev.sh
-   ```
+3. Acesse a aplicação em [http://localhost:3000](http://localhost:3000)
 
----
+`Ctrl+C` derruba os containers (ou rode `docker compose down` em outro terminal).
 
-### Método 2: Execução Manual
+## Portas
 
-Caso prefira rodar cada etapa manualmente:
+| Serviço | Porta |
+|---|---|
+| web (Next.js) | 3000 |
+| api-gateway | 3001 |
+| auth-service | 3002 |
+| bff (FastAPI) | 8000 |
+| postgres | 5432 |
 
-1. **Instalar Dependências do Frontend**:
-   Navegue até a pasta do frontend e instale as dependências com o npm:
-   ```bash
-   cd frontend
-   npm install
-   ```
+## Credenciais do Seed (ambiente de desenvolvimento)
 
-2. **Iniciar o Servidor de Desenvolvimento**:
-   Ainda na pasta `frontend`, inicie o servidor:
-   ```bash
-   npm run dev
-   ```
+Ao subir pela primeira vez, o `auth-service` cria automaticamente um instituto padrão e um usuário de cada papel, caso não existam:
 
-3. **Acessar a Aplicação**:
-   Abra o seu navegador e acesse o endereço:
-   [http://localhost:3000](http://localhost:3000)
+| Papel | E-mail | Senha padrão* |
+|---|---|---|
+| SUPERADMIN | superadmin@ufba.br | `SuperAdminPassword123!` |
+| ADMIN | admin@ufba.br | `AdminPassword123!` |
+| PROFESSOR | professor@ufba.br | `ProfessorPassword123!` |
+
+\* Usadas apenas se `SEED_SUPERADMIN_PASSWORD`, `SEED_ADMIN_PASSWORD` e `SEED_PROFESSOR_PASSWORD` não forem definidas no `.env` da raiz. O seed nunca roda em `NODE_ENV=production`.

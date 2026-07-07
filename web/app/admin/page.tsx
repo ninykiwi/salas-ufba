@@ -129,11 +129,11 @@ export default function Home() {
               ))}
 
               {/* Add Card */}
-              <Link href="/salas/cadastrar-evento">
+              <Link href="/admin/cadastrar-sala">
                 <div className="border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center p-6 text-gray-400 hover:border-[#000666] hover:text-[#000666] transition-all cursor-pointer min-h-[300px]">
                   <div className="text-center justify-center flex flex-col items-center gap-2">
                     <CirclePlus size={36} />
-                    <p className="font-bold uppercase tracking-wider text-sm">Cadastrar Evento</p>
+                    <p className="font-bold uppercase tracking-wider text-sm">Cadastrar Sala</p>
                   </div>
                 </div>
               </Link>
