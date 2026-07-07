@@ -10,8 +10,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: "Visão Geral", href: "/professor", icon: <LayoutGrid size={18} /> },
-  { label: "Cadastrar Eventos", href: "/cadastrar-evento", icon: <ClipboardPen size={18} /> },
-  { label: "Minhas Solicitações", href: "/minhas-solicitacoes", icon: <ClipboardClock size={18} /> },
+  { label: "Cadastrar Eventos", href: "/professor/cadastrar-evento", icon: <ClipboardPen size={18} /> },
+  { label: "Minhas Solicitações", href: "/professor/minhas-solicitacoes", icon: <ClipboardClock size={18} /> },
   { label: "TV Display", href: "/view", icon: <Monitor size={18} /> },
 ];
 
