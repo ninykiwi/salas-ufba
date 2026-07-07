@@ -3,12 +3,59 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { User, Lock, LogIn, ShieldCheck, Globe } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { User, Lock, LogIn, ShieldCheck, Globe, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepConnected, setKeepConnected] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:3001/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "E-mail, SIAPE ou senha incorretos.");
+      }
+
+      const data = await response.json();
+      
+      // Save token and user details in localStorage
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // Redirect depending on user role
+      if (data.user.role === "PROFESSOR") {
+        router.push("/professor");
+      } else {
+        router.push("/admin");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erro de conexão com o servidor de autenticação.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
@@ -31,7 +78,13 @@ export default function LoginPage() {
               Identifique-se para gerenciar salas e horários acadêmicos.
             </p>
 
-            <div className="flex flex-col gap-5">
+            <form onSubmit={handleLogin} className="flex flex-col gap-5">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs font-semibold">
+                  {error}
+                </div>
+              )}
+
               <div>
                 <label className="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1.5 block">
                   E-mail ou SIAPE
@@ -43,7 +96,8 @@ export default function LoginPage() {
                     placeholder="Ex: docente@ufba.br ou 1234567"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="text-sm text-gray-700 placeholder-gray-300 outline-none w-full"
+                    disabled={isLoading}
+                    className="text-sm text-gray-700 placeholder-gray-300 outline-none w-full bg-transparent"
                   />
                 </div>
               </div>
@@ -61,7 +115,8 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="text-sm text-gray-700 placeholder-gray-300 outline-none w-full"
+                    disabled={isLoading}
+                    className="text-sm text-gray-700 placeholder-gray-300 outline-none w-full bg-transparent"
                   />
                 </div>
               </div>
@@ -71,18 +126,30 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={keepConnected}
                   onChange={(e) => setKeepConnected(e.target.checked)}
+                  disabled={isLoading}
                   className="w-4 h-4 accent-indigo-900"
                 />
                 <span className="text-sm text-gray-600">Manter conectado neste dispositivo</span>
               </label>
 
-              <Link href="/admin">
-                <button className="flex items-center justify-center gap-2 w-full bg-[#000666] hover:bg-[#333784] text-white font-bold text-sm py-3.5 rounded-lg transition-colors">
-                  LOGIN
-                  <LogIn size={16} />
-                </button>
-              </Link>
-            </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center justify-center gap-2 w-full bg-[#000666] hover:bg-[#333784] disabled:bg-gray-400 text-white font-bold text-sm py-3.5 rounded-lg transition-colors cursor-pointer"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    CONECTANDO...
+                  </>
+                ) : (
+                  <>
+                    LOGIN
+                    <LogIn size={16} />
+                  </>
+                )}
+              </button>
+            </form>
 
             <div className="border-t border-gray-200 mt-6 pt-6 text-center">
               <p className="text-sm text-gray-500">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 
 export interface Usuario {
-  id: number;
+  id: string | number;
   nome: string;
   iniciais: string;
   email: string;
@@ -12,6 +12,8 @@ export interface Usuario {
   funcao: "ADMINISTRADOR" | "PROFESSOR";
   departamento: string;
   ultimoAcesso: string;
+  role?: string;
+  institutes?: { id: string; name: string }[];
 }
 
 type FilterTab = "Todos" | "Professores" | "Administradores";

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, UnauthorizedException, ForbiddenException, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, UnauthorizedException, ForbiddenException, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Role } from '@prisma/client';
@@ -23,6 +23,14 @@ export class AuthController {
   ) {
     const requester = req.user;
     
+    // Validate password complexity
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
+    if (!body.password || !passwordRegex.test(body.password)) {
+      throw new BadRequestException(
+        'A senha não atende aos requisitos de complexidade: mínimo de 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial.',
+      );
+    }
+
     // Default to PROFESSOR if no role is provided
     const targetRole = body.role || Role.PROFESSOR;
 
@@ -31,9 +39,28 @@ export class AuthController {
       throw new ForbiddenException('Professores não têm permissão para cadastrar usuários');
     }
 
-    // 2. ADMIN can only register PROFESSOR
-    if (requester.role === Role.ADMIN && targetRole !== Role.PROFESSOR) {
-      throw new ForbiddenException('Administradores só podem cadastrar professores');
+    // 2. ADMIN restrictions
+    if (requester.role === Role.ADMIN) {
+      if (targetRole !== Role.PROFESSOR) {
+        throw new ForbiddenException('Administradores só podem cadastrar professores');
+      }
+
+      // Check and enforce institute matching for ADMIN
+      if (body.instituteIds && body.instituteIds.length > 0) {
+        const adminInstituteIds = requester.institutes?.map(inst => inst.id) || [];
+        const hasInvalidAssociation = body.instituteIds.some(
+          id => !adminInstituteIds.includes(id),
+        );
+
+        if (hasInvalidAssociation) {
+          throw new ForbiddenException(
+            'Administradores só podem cadastrar professores associados aos seus próprios institutos',
+          );
+        }
+      } else {
+        // Automatically link professor to the admin's institutes if none specified
+        body.instituteIds = requester.institutes?.map(inst => inst.id) || [];
+      }
     }
 
     // 3. SUPERADMIN can register anyone
