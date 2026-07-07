@@ -159,22 +159,38 @@ export default function MapaPage() {
           </div>
 
           <div className="flex flex-1 overflow-hidden">
-            <div className="flex-1 overflow-auto scrollbar-hide" ref={canvasRef}>
-              {shapes.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
-                  <p className="text-sm">Nenhum mapa cadastrado para este andar.</p>
+            <div
+                className="flex-1 overflow-auto scrollbar-hide relative"
+                ref={canvasRef}
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+            >
+                {shapes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                    <p className="text-sm">Nenhum mapa cadastrado para este andar.</p>
+                    </div>
+                ) : (
+                    <MapViewCanvas
+                    shapes={shapes}
+                    occupiedIds={occupiedIds}
+                    selectedId={selectedId}
+                    onSelect={setSelectedId}
+                    width={canvasWidth}
+                    height={600}
+                    events={mockEvents}
+                    />
+                )}
+
+                <div className="fixed bottom-22 left-63 bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex flex-col gap-2 z-20">
+                    <p className="text-xs font-bold text-indigo-900 uppercase tracking-widest">Legenda</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span className="w-4 h-4 rounded-sm shrink-0" style={{ backgroundColor: "#1A237E" }} />
+                        Ocupada
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <span className="w-4 h-4 rounded-sm shrink-0 border border-gray-200" style={{ backgroundColor: "#9CA3AF" }} />
+                        Livre
+                    </div>
                 </div>
-              ) : (
-                <MapViewCanvas
-                  shapes={shapes}
-                  occupiedIds={occupiedIds}
-                  selectedId={selectedId}
-                  onSelect={setSelectedId}
-                  width={canvasWidth}
-                  height={600}
-                  events={mockEvents}
-                />
-              )}
             </div>
 
             <div className="w-64 shrink-0 border-l border-gray-200 bg-white px-5 py-6">
