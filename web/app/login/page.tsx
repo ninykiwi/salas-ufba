@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Lock, LogIn, ShieldCheck, Globe, Loader2 } from "lucide-react";
-import { login } from "@/lib/api";
+import { login, Role } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+
+const dashboardRouteByRole: Record<Role, string> = {
+  SUPERADMIN: "/super-admin/logs",
+  ADMIN: "/admin",
+  PROFESSOR: "/professor",
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +21,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { user, isLoading: authLoading, isAuthenticated, refreshUser } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      router.push(dashboardRouteByRole[user.role] ?? "/");
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,24 +40,22 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const data = await login(email, password);
-
-      // Save token and user details in localStorage
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      // Redirect depending on user role
-      if (data.user.role === "PROFESSOR") {
-        router.push("/professor");
-      } else {
-        router.push("/admin");
-      }
+      await login(email, password, keepConnected);
+      await refreshUser();
+      // O redirecionamento acontece no useEffect acima assim que `user` for populado.
     } catch (err: any) {
-      setError(err.message || "Erro de conexão com o servidor de autenticação.");
-    } finally {
+      setError(err.message || "Credenciais inválidas.");
       setIsLoading(false);
     }
   };
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#000666]" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
@@ -136,6 +148,14 @@ export default function LoginPage() {
                     <LogIn size={16} />
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="w-full bg-white border border-indigo-900 text-indigo-900 font-bold text-sm py-3.5 rounded-lg transition-colors hover:bg-gray-50 cursor-pointer"
+              >
+                ANÔNIMO
               </button>
             </form>
 

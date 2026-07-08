@@ -10,10 +10,10 @@ const defaultProps = {
   selectedCampus: 1,
   onCampusChange: vi.fn(),
   institutes: [
-    { id: 1, name: "Instituto de Computação" },
-    { id: 2, name: "Instituto de Física" },
+    { id: "1", name: "Instituto de Computação" },
+    { id: "2", name: "Instituto de Física" },
   ],
-  selectedInstitute: 1,
+  selectedInstitute: "1",
   onInstituteChange: vi.fn(),
 };
 
@@ -65,7 +65,7 @@ describe("TopBar", () => {
     render(<TopBar {...defaultProps} />);
     await userEvent.click(screen.getByText("Instituto de Computação"));
     await userEvent.click(screen.getByText("Instituto de Física"));
-    expect(defaultProps.onInstituteChange).toHaveBeenCalledWith(2);
+    expect(defaultProps.onInstituteChange).toHaveBeenCalledWith("2");
   });
 
   it("fecha o dropdown de campus ao clicar fora", async () => {

@@ -70,6 +70,7 @@ services:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_BFF_URL: ${NEXT_PUBLIC_BFF_URL}
+      BFF_INTERNAL_URL: http://bff:8000
     depends_on:
       - bff
     networks:

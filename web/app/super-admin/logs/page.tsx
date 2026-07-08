@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import Footer from "@/components/home/Footer";
 import { Search, Shield } from "lucide-react";
 
 interface LogEntry {
@@ -142,6 +143,8 @@ export default function LogsPage() {
             </table>
           </div>
         </main>
+
+        <Footer />
       </div>
     </div>
   );

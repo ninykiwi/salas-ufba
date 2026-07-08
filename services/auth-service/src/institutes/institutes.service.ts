@@ -1,4 +1,8 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Institute } from '@prisma/client';
 
@@ -53,5 +57,25 @@ export class InstitutesService {
     return this.prisma.institute.findUnique({
       where: { id },
     });
+  }
+
+  async remove(id: string): Promise<void> {
+    const institute = await this.prisma.institute.findUnique({
+      where: { id },
+      include: { users: true },
+    });
+
+    if (!institute) {
+      throw new NotFoundException('Instituto não encontrado');
+    }
+
+    if (institute.users.length > 0) {
+      await this.prisma.institute.update({
+        where: { id },
+        data: { users: { set: [] } },
+      });
+    }
+
+    await this.prisma.institute.delete({ where: { id } });
   }
 }

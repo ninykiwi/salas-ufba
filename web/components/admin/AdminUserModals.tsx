@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Usuario } from "./AdminUserTable";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building2, ChevronDown } from "lucide-react";
 import { updateUser, deleteUser, Role } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 interface InstituteOption {
   id: string | number;
@@ -34,36 +35,50 @@ export default function AdminUserModals({
   const [email, setEmail] = useState("");
   const [siape, setSiape] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<Role>("PROFESSOR");
-  const [selectedInstituteIds, setSelectedInstituteIds] = useState<string[]>([]);
-  
+  const [selectedInstituteId, setSelectedInstituteId] = useState<string | null>(null);
+  const [instituteOpen, setInstituteOpen] = useState(false);
+  const instituteRef = useRef<HTMLDivElement>(null);
+
   // Controle de Submissão e Erros
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Informações do Usuário Logado
-  const [currentUserRole, setCurrentUserRole] = useState("PROFESSOR");
-  const [currentUserInstitutes, setCurrentUserInstitutes] = useState<any[]>([]);
+  const { user: currentUser } = useAuth();
+  const currentUserRole = currentUser?.role || "PROFESSOR";
+  const currentUserInstitutes = currentUser?.institutes || [];
 
   // Carrega e preenche os dados do modal quando abrir
   useEffect(() => {
-    // Pegar usuário logado
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    setCurrentUserRole(storedUser.role || "PROFESSOR");
-    setCurrentUserInstitutes(storedUser.institutes || []);
-
     if (selectedUser) {
       setName(selectedUser.nome);
       setEmail(selectedUser.email);
       setSiape(selectedUser.siape === "N/A" ? "" : selectedUser.siape);
       setPassword("");
+      setConfirmPassword("");
       setRole((selectedUser.role as Role) || "PROFESSOR");
-      setSelectedInstituteIds(
-        selectedUser.institutes?.map((inst) => String(inst.id)) || []
+      setSelectedInstituteId(
+        selectedUser.institutes?.[0] ? String(selectedUser.institutes[0].id) : null
       );
       setError("");
+      setPasswordError("");
+      setConfirmPasswordError("");
     }
   }, [selectedUser, isEditOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) {
+        setInstituteOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Filtra institutos que o ADMIN logado pode gerenciar
   const allowedInstitutes = currentUserRole === "SUPERADMIN"
@@ -74,20 +89,29 @@ export default function AdminUserModals({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError("");
+    setConfirmPasswordError("");
+
     if (!name.trim()) return setError("Nome completo é obrigatório");
     if (!email.trim()) return setError("E-mail institucional é obrigatório");
-    if (selectedInstituteIds.length === 0) {
-      return setError("Selecione pelo menos um instituto/unidade");
-    }
 
     if (password) {
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+      let hasFieldError = false;
+
       if (!passwordRegex.test(password)) {
-        setError(
-          "A nova senha deve ter no mínimo 8 caracteres, com pelo menos 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial (!@#$%)."
+        setPasswordError(
+          "Deve conter pelo menos 8 caracteres, sendo 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial"
         );
-        return;
+        hasFieldError = true;
       }
+
+      if (password !== confirmPassword) {
+        setConfirmPasswordError("As senhas não coincidem");
+        hasFieldError = true;
+      }
+
+      if (hasFieldError) return;
     }
 
     setIsSubmitting(true);
@@ -100,7 +124,7 @@ export default function AdminUserModals({
         siape: siape.trim() || null,
         password: password || undefined,
         role,
-        instituteIds: selectedInstituteIds,
+        instituteIds: selectedInstituteId ? [selectedInstituteId] : [],
       });
 
       onUserUpdated();
@@ -125,14 +149,6 @@ export default function AdminUserModals({
       setError(err.message || "Erro de conexão com o servidor.");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleCheckboxChange = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedInstituteIds([...selectedInstituteIds, id]);
-    } else {
-      setSelectedInstituteIds(selectedInstituteIds.filter((item) => item !== id));
     }
   };
 
@@ -235,7 +251,7 @@ export default function AdminUserModals({
               </div>
 
               {/* Senha */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Nova Senha (deixe em branco para não alterar)
                 </label>
@@ -244,8 +260,32 @@ export default function AdminUserModals({
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none"
+                  className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none ${
+                    passwordError ? "border-red-500 border-dashed" : "border-gray-300"
+                  }`}
                 />
+                {passwordError && (
+                  <p className="mt-1 text-xs text-red-600 font-semibold">{passwordError}</p>
+                )}
+              </div>
+
+              {/* Repetir Senha */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Repetir Senha
+                </label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none ${
+                    confirmPasswordError ? "border-red-500 border-dashed" : "border-gray-300"
+                  }`}
+                />
+                {confirmPasswordError && (
+                  <p className="mt-1 text-xs text-red-600 font-semibold">{confirmPasswordError}</p>
+                )}
               </div>
 
               {/* Permissão / Função */}
@@ -269,29 +309,48 @@ export default function AdminUserModals({
                 )}
               </div>
 
-              {/* Instituto / Faculdade (Checkbox List) */}
+              {/* Instituto / Faculdade */}
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                  Instituto / Unidade (Selecione pelo menos um)
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Instituto / Unidade (opcional)
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-md p-3">
-                  {allowedInstitutes.map((inst) => {
-                    const isChecked = selectedInstituteIds.includes(String(inst.id));
-                    return (
-                      <label
-                        key={inst.id}
-                        className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded p-2 hover:bg-gray-100 cursor-pointer select-none transition-colors"
+                <div className="relative" ref={instituteRef}>
+                  <button
+                    type="button"
+                    onClick={() => setInstituteOpen((v) => !v)}
+                    className="flex items-center justify-between gap-2 w-full border border-gray-300 rounded-md p-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-white"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Building2 size={14} className="text-gray-400" />
+                      {allowedInstitutes.find((i) => String(i.id) === selectedInstituteId)?.name ?? "Nenhum instituto"}
+                    </span>
+                    <ChevronDown size={14} className="text-gray-400" />
+                  </button>
+                  {instituteOpen && (
+                    <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-48 overflow-y-auto">
+                      <li
+                        onClick={() => {
+                          setSelectedInstituteId(null);
+                          setInstituteOpen(false);
+                        }}
+                        className="px-3 py-2 text-sm text-gray-400 hover:bg-gray-50 cursor-pointer"
                       >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => handleCheckboxChange(String(inst.id), e.target.checked)}
-                          className="rounded text-[#000666] focus:ring-[#000666]"
-                        />
-                        <span className="truncate">{inst.name}</span>
-                      </label>
-                    );
-                  })}
+                        Nenhum instituto
+                      </li>
+                      {allowedInstitutes.map((inst) => (
+                        <li
+                          key={inst.id}
+                          onClick={() => {
+                            setSelectedInstituteId(String(inst.id));
+                            setInstituteOpen(false);
+                          }}
+                          className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                        >
+                          {inst.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             </div>

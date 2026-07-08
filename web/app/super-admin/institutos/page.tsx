@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle } from "lucide-react";
-import { getInstitutes, createInstitute, ApiError } from "@/lib/api";
+import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { getInstitutes, createInstitute, deleteInstitute, getUsers, ApiError } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Institute {
   id: string;
@@ -23,6 +24,15 @@ export default function GestaoInstitutos() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
+  const { user } = useAuth();
+
+  // Estados do modal de exclusão
+  const [deleteTarget, setDeleteTarget] = useState<Institute | null>(null);
+  const [linkedUsersCount, setLinkedUsersCount] = useState(0);
+  const [confirmChecked, setConfirmChecked] = useState(false);
+  const [isCheckingLinkedUsers, setIsCheckingLinkedUsers] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const fetchInstitutes = async () => {
     try {
@@ -40,26 +50,9 @@ export default function GestaoInstitutos() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const userStr = localStorage.getItem("user");
-
-    if (!token || !userStr) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(userStr);
-      if (user.role !== "SUPERADMIN") {
-        // Only superadmins are allowed
-        router.push("/admin");
-        return;
-      }
-      fetchInstitutes();
-    } catch (e) {
-      router.push("/login");
-    }
-  }, [router]);
+    if (!user) return;
+    fetchInstitutes();
+  }, [user]);
 
   const handleCreateInstitute = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,13 +75,54 @@ export default function GestaoInstitutos() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/super-admin/institutos" />
+  const handleOpenDeleteModal = async (institute: Institute) => {
+    setDeleteError("");
+    setConfirmChecked(false);
+    setIsCheckingLinkedUsers(true);
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminTopBar />
+    try {
+      const users = await getUsers();
+      const count = users.filter((u) =>
+        u.institutes.some((inst) => inst.id === institute.id)
+      ).length;
+      setLinkedUsersCount(count);
+      setDeleteTarget(institute);
+    } catch (err: any) {
+      setError(err.message || "Não foi possível verificar usuários vinculados.");
+    } finally {
+      setIsCheckingLinkedUsers(false);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteTarget(null);
+    setDeleteError("");
+    setConfirmChecked(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      await deleteInstitute(deleteTarget.id);
+      setInstitutes((prev) => prev.filter((inst) => inst.id !== deleteTarget.id));
+      handleCloseDeleteModal();
+    } catch (err: any) {
+      setDeleteError(err.message || "Ocorreu um erro ao tentar excluir.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar activeHref="/super-admin/institutos" />
+
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
 
           <main className="flex-1 overflow-y-auto px-8 py-6">
             
@@ -184,6 +218,7 @@ export default function GestaoInstitutos() {
                           <th className="px-6 py-3">Nome</th>
                           <th className="px-6 py-3">Slug (Identificador)</th>
                           <th className="px-6 py-3">Data de Criação</th>
+                          <th className="px-6 py-3 text-right">Ações</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -197,6 +232,16 @@ export default function GestaoInstitutos() {
                             <td className="px-6 py-4 text-xs text-gray-500">
                               {new Date(inst.createdAt).toLocaleDateString("pt-BR")}
                             </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={() => handleOpenDeleteModal(inst)}
+                                disabled={isCheckingLinkedUsers}
+                                title="Excluir instituto"
+                                className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 cursor-pointer"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -207,10 +252,65 @@ export default function GestaoInstitutos() {
 
             </div>
           </main>
-        </div>
-      </div>
 
-      <Footer />
+          <Footer />
+        </div>
+
+      {/* Modal de Exclusão de Instituto */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir instituto</h3>
+
+            {linkedUsersCount === 0 ? (
+              <p className="text-sm text-gray-500 mb-4">
+                Tem certeza que deseja excluir <strong>{deleteTarget.name}</strong>? Essa ação não
+                pode ser desfeita.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">
+                  O instituto <strong>{deleteTarget.name}</strong> possui {linkedUsersCount}{" "}
+                  usuário(s) vinculado(s). Ao excluir, esses usuários ficarão sem instituto.
+                </p>
+                <label className="flex items-center gap-2 text-sm text-gray-700 mb-4 select-none cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmChecked}
+                    onChange={(e) => setConfirmChecked(e.target.checked)}
+                    className="rounded text-[#000666] focus:ring-[#000666]"
+                  />
+                  Prosseguir com a exclusão mesmo assim
+                </label>
+              </>
+            )}
+
+            {deleteError && (
+              <div className="mb-4 p-3 text-xs bg-red-50 border border-red-200 text-red-600 rounded">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCloseDeleteModal}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded transition-colors disabled:opacity-50"
+              >
+                CANCELAR
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting || (linkedUsersCount > 0 && !confirmChecked)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting && <Loader2 className="animate-spin" size={16} />}
+                EXCLUIR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

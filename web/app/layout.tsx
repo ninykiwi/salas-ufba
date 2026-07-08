@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Hanken_Grotesk } from 'next/font/google';
+import { AuthProvider } from '@/contexts/AuthContext';
 import './globals.css';
 
 const hankenGrotesk = Hanken_Grotesk({ 
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={hankenGrotesk.variable}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

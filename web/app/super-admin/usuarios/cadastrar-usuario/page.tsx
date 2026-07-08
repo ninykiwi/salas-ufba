@@ -1,16 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Info, ShieldCheck, Mail, Loader2, CheckCircle, AlertTriangle, UserPlus } from "lucide-react";
+import { Info, ShieldCheck, Mail, Loader2, AlertTriangle, UserPlus, Building2, ChevronDown } from "lucide-react";
 import { getInstitutes, createUser } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Institute {
   id: string;
   name: string;
+}
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+const PASSWORD_HELP_TEXT =
+  "Deve conter pelo menos 8 caracteres, sendo 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial";
+
+interface FieldErrors {
+  name?: boolean;
+  email?: boolean;
+  siape?: boolean;
+  password?: "required" | "weak";
+  confirmPassword?: "required" | "mismatch";
 }
 
 export default function CadastrarUsuario() {
@@ -19,78 +32,119 @@ export default function CadastrarUsuario() {
   const [email, setEmail] = useState("");
   const [siape, setSiape] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"PROFESSOR" | "ADMIN">("PROFESSOR");
-  const [selectedInstituteIds, setSelectedInstituteIds] = useState<string[]>([]);
-  
-  const [currentUserRole, setCurrentUserRole] = useState("");
+  const [selectedInstituteId, setSelectedInstituteId] = useState<string | null>(null);
+  const [instituteOpen, setInstituteOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const instituteRef = useRef<HTMLDivElement>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  
+
+  const inputErrorClass = (
+    kind: "required" | "dashed" | undefined
+  ) =>
+    kind === "required"
+      ? "border-red-500"
+      : kind === "dashed"
+      ? "border-red-500 border-dashed"
+      : "border-gray-300";
+
   const router = useRouter();
+  const { user } = useAuth();
+  const currentUserRole = user?.role || "";
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const userStr = localStorage.getItem("user");
+    if (!user) return;
 
-    if (!token || !userStr) {
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(userStr);
-      setCurrentUserRole(user.role);
-
-      // Fetch or load institutes
-      const loadInstitutes = async () => {
-        try {
-          if (user.role === "SUPERADMIN") {
-            const data = await getInstitutes();
-            setInstitutes(data);
-            if (data.length > 0) {
-              setSelectedInstituteIds([data[0].id]);
-            }
-          } else {
-            // ADMIN can only register teachers inside the institutes they are associated with
-            const adminInsts = user.institutes || [];
-            setInstitutes(adminInsts);
-            if (adminInsts.length > 0) {
-              setSelectedInstituteIds([adminInsts[0].id]);
-            }
+    const loadInstitutes = async () => {
+      try {
+        if (user.role === "SUPERADMIN") {
+          const data = await getInstitutes();
+          setInstitutes(data);
+          if (data.length > 0) {
+            setSelectedInstituteId(data[0].id);
           }
-        } catch (err) {
-          console.error("Failed to load institutes", err);
-        } finally {
-          setIsLoading(false);
+        } else {
+          // ADMIN can only register teachers inside the institutes they are associated with
+          const adminInsts = user.institutes || [];
+          setInstitutes(adminInsts);
+          if (adminInsts.length > 0) {
+            setSelectedInstituteId(adminInsts[0].id);
+          }
         }
-      };
+      } catch (err) {
+        console.error("Failed to load institutes", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      loadInstitutes();
-    } catch (e) {
-      router.push("/login");
+    loadInstitutes();
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) {
+        setInstituteOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const clearFieldError = (field: keyof FieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const rest = { ...prev };
+      delete rest[field];
+      return rest;
+    });
+  };
+
+  const handlePasswordBlur = () => {
+    if (password && !PASSWORD_REGEX.test(password)) {
+      setFieldErrors((prev) => ({ ...prev, password: "weak" }));
     }
-  }, [router]);
+  };
+
+  const handleConfirmPasswordBlur = () => {
+    if (confirmPassword && confirmPassword !== password) {
+      setFieldErrors((prev) => ({ ...prev, confirmPassword: "mismatch" }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) {
-      setError("Por favor, preencha o Nome, E-mail e Senha.");
+
+    const errors: FieldErrors = {};
+    if (!name.trim()) errors.name = true;
+    if (!email.trim()) errors.email = true;
+    if (!siape.trim()) errors.siape = true;
+
+    if (!password) {
+      errors.password = "required";
+    } else if (!PASSWORD_REGEX.test(password)) {
+      errors.password = "weak";
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = "required";
+    } else if (confirmPassword !== password) {
+      errors.confirmPassword = "mismatch";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#.\-_])[A-Za-z\d@$!%*?&#.\-_]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      setError(
-        "A senha deve ter no mínimo 8 caracteres, uma letra maiúscula, uma letra minúscula, um número e um caractere especial (Ex: @$!%*?&)."
-      );
-      return;
-    }
-
+    setFieldErrors({});
     setIsSubmitting(true);
     setError("");
-    setSuccess("");
 
     try {
       await createUser({
@@ -99,33 +153,24 @@ export default function CadastrarUsuario() {
         password,
         role,
         siape: siape ? siape.trim() : undefined,
-        instituteIds: selectedInstituteIds,
+        instituteIds: selectedInstituteId ? [selectedInstituteId] : [],
       });
 
-      setSuccess("Usuário cadastrado com sucesso!");
-      setName("");
-      setEmail("");
-      setSiape("");
-      setPassword("");
-      setRole("PROFESSOR");
-      setSelectedInstituteIds(institutes.length > 0 ? [institutes[0].id] : []);
-      setTimeout(() => setSuccess(""), 4000);
+      router.push("/super-admin/usuarios");
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro ao cadastrar o usuário.");
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/super-admin/usuarios" />
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar activeHref="/super-admin/usuarios" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminTopBar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
 
-          <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-[#000666]">Cadastrar Novo Usuário</h1>
               <p className="text-sm text-gray-500 mt-1">Adicione um novo docente ou administrador ao sistema Salas UFBA 2.0.</p>
@@ -144,20 +189,18 @@ export default function CadastrarUsuario() {
                     </div>
                   )}
 
-                  {success && (
-                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-lg p-4 text-sm font-semibold flex items-start gap-2">
-                      <CheckCircle size={18} className="shrink-0 mt-0.5" />
-                      <span>{success}</span>
-                    </div>
-                  )}
-
                   <div className="space-y-2">
                     <label className="font-bold text-sm text-gray-700">Nome Completo</label>
                     <input
-                      className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
+                      className={`w-full border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none ${inputErrorClass(
+                        fieldErrors.name ? "required" : undefined
+                      )}`}
                       placeholder="ex: João Silva"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        clearFieldError("name");
+                      }}
                       disabled={isSubmitting}
                       required
                     />
@@ -168,10 +211,15 @@ export default function CadastrarUsuario() {
                       <label className="font-bold text-sm text-gray-700">E-mail Institucional</label>
                       <input
                         type="email"
-                        className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
+                        className={`w-full border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none ${inputErrorClass(
+                          fieldErrors.email ? "required" : undefined
+                        )}`}
                         placeholder="usuario@ufba.br"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          clearFieldError("email");
+                        }}
                         disabled={isSubmitting}
                         required
                       />
@@ -179,60 +227,124 @@ export default function CadastrarUsuario() {
                     <div className="space-y-2">
                       <label className="font-bold text-sm text-gray-700">Matrícula SIAPE</label>
                       <input
-                        className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
-                        placeholder="ex: 1234567 (opcional para admin)"
+                        className={`w-full border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none ${inputErrorClass(
+                          fieldErrors.siape ? "required" : undefined
+                        )}`}
+                        placeholder="ex: 1234567"
                         value={siape}
-                        onChange={(e) => setSiape(e.target.value)}
+                        onChange={(e) => {
+                          setSiape(e.target.value);
+                          clearFieldError("siape");
+                        }}
                         disabled={isSubmitting}
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700">Senha de Acesso</label>
-                      <input
-                        type="password"
-                        className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
-                        placeholder="Mínimo 8 caracteres (Ex: Senha123!)"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={isSubmitting}
-                        required
-                      />
-                      <span className="text-[10px] text-gray-400 block mt-1">
-                        Deve conter pelo menos 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial.
-                      </span>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="font-bold text-sm text-gray-700">Senha de Acesso</label>
+                        <input
+                          type="password"
+                          className={`w-full border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none ${inputErrorClass(
+                            fieldErrors.password === "required"
+                              ? "required"
+                              : fieldErrors.password === "weak"
+                              ? "dashed"
+                              : undefined
+                          )}`}
+                          placeholder="Mínimo 8 caracteres (Ex: Senha123!)"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            clearFieldError("password");
+                          }}
+                          onBlur={handlePasswordBlur}
+                          disabled={isSubmitting}
+                          required
+                        />
+                        {fieldErrors.password === "weak" ? (
+                          <span className="text-red-500 text-xs mt-1 block">{PASSWORD_HELP_TEXT}</span>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 block mt-1">
+                            Deve conter pelo menos 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial.
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="font-bold text-sm text-gray-700">Repetir Senha</label>
+                        <input
+                          type="password"
+                          className={`w-full border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none ${inputErrorClass(
+                            fieldErrors.confirmPassword === "required"
+                              ? "required"
+                              : fieldErrors.confirmPassword === "mismatch"
+                              ? "dashed"
+                              : undefined
+                          )}`}
+                          placeholder="Confirme a senha"
+                          value={confirmPassword}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            clearFieldError("confirmPassword");
+                          }}
+                          onBlur={handleConfirmPasswordBlur}
+                          disabled={isSubmitting}
+                          required
+                        />
+                        {fieldErrors.confirmPassword === "mismatch" && (
+                          <span className="text-red-500 text-xs mt-1 block">As senhas não coincidem</span>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700">Associar a Institutos / Prédios</label>
+                      <label className="font-bold text-sm text-gray-700">Associar a Instituto / Prédio (opcional)</label>
                       {isLoading ? (
                         <div className="flex items-center gap-2 h-11 text-xs text-gray-400">
                           <Loader2 size={16} className="animate-spin" />
                           <span>Carregando institutos...</span>
                         </div>
                       ) : (
-                        <div className="border border-gray-300 rounded p-3 text-sm focus-within:ring-1 focus-within:ring-[#000666] focus-within:border-[#000666] outline-none max-h-40 overflow-y-auto space-y-2 bg-white">
-                          {institutes.map((inst) => (
-                            <label key={inst.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors">
-                              <input
-                                type="checkbox"
-                                checked={selectedInstituteIds.includes(inst.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedInstituteIds([...selectedInstituteIds, inst.id]);
-                                  } else {
-                                    setSelectedInstituteIds(selectedInstituteIds.filter((id) => id !== inst.id));
-                                  }
+                        <div className="relative" ref={instituteRef}>
+                          <button
+                            type="button"
+                            onClick={() => setInstituteOpen((v) => !v)}
+                            disabled={isSubmitting}
+                            className="flex items-center justify-between gap-2 w-full border border-gray-300 rounded p-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-white"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Building2 size={14} className="text-gray-400" />
+                              {institutes.find((i) => i.id === selectedInstituteId)?.name ?? "Nenhum instituto"}
+                            </span>
+                            <ChevronDown size={14} className="text-gray-400" />
+                          </button>
+                          {instituteOpen && (
+                            <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-40 overflow-y-auto">
+                              <li
+                                onClick={() => {
+                                  setSelectedInstituteId(null);
+                                  setInstituteOpen(false);
                                 }}
-                                disabled={isSubmitting}
-                                className="w-4 h-4 text-[#000666] accent-[#000666] rounded"
-                              />
-                              <span className="text-gray-700">{inst.name}</span>
-                            </label>
-                          ))}
-                          {institutes.length === 0 && (
-                            <span className="text-xs text-gray-400">Nenhum instituto disponível</span>
+                                className="px-3 py-2 text-sm text-gray-400 hover:bg-gray-50 cursor-pointer"
+                              >
+                                Nenhum instituto
+                              </li>
+                              {institutes.map((inst) => (
+                                <li
+                                  key={inst.id}
+                                  onClick={() => {
+                                    setSelectedInstituteId(inst.id);
+                                    setInstituteOpen(false);
+                                  }}
+                                  className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                                >
+                                  {inst.name}
+                                </li>
+                              ))}
+                            </ul>
                           )}
                         </div>
                       )}
@@ -335,9 +447,9 @@ export default function CadastrarUsuario() {
               </div>
             </div>
           </main>
+
+          <Footer />
         </div>
-      </div>
-      <Footer />
     </div>
   );
 }

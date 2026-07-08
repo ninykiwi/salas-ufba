@@ -20,14 +20,13 @@ const mockRequests: Solicitacao[] = [
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/salas" />
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar activeHref="/salas" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminTopBar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
 
-          <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="space-y-8 mt-1 pb-12">
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Gestão de Salas e Ambientes</h1>
@@ -69,10 +68,9 @@ export default function Home() {
 
             </div>
           </main>
-        </div>
-      </div>
 
-      <Footer />
+          <Footer />
+        </div>
     </div>
   );
 }

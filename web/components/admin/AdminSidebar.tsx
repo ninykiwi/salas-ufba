@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { LayoutGrid, ClipboardClock, UserPlus, ChartColumn , Building, Map, Logs } from "lucide-react";
+import { LayoutGrid, ClipboardClock, UserPlus, ChartColumn , Building, Map, Logs, LogOut, Home } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   label: string;
@@ -16,27 +16,16 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ activeHref = "/" }: AdminSidebarProps) {
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user session in sidebar", e);
-      }
-    }
-  }, []);
+  const { user, logout } = useAuth();
 
   // Dynamically build navItems based on user role
   const navItems: NavItem[] = [];
   if (user) {
     if (user.role === "SUPERADMIN") {
       navItems.push(
+        { label: "Logs do Sistema", href: "/super-admin/logs", icon: <Logs size={18} /> },
         { label: "Gestão de Institutos", href: "/super-admin/institutos", icon: <Building size={18} /> },
-        { label: "Gestão de Usuários", href: "/super-admin/usuarios", icon: <UserPlus size={18} /> },
-        { label: "Logs do Sistema", href: "/super-user/logs", icon: <Logs size={18} /> }
+        { label: "Gestão de Usuários", href: "/super-admin/usuarios", icon: <UserPlus size={18} /> }
       );
     } else {
       // ADMIN
@@ -79,6 +68,23 @@ export default function AdminSidebar({ activeHref = "/" }: AdminSidebarProps) {
           );
         })}
       </nav>
+
+      <div className="px-3 py-4 border-t border-gray-200 flex flex-col gap-1">
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        >
+          <Home size={18} />
+          Ir para Home
+        </Link>
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
+        >
+          <LogOut size={18} />
+          Sair
+        </button>
+      </div>
 
     </aside>
   );

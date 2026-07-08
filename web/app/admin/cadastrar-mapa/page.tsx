@@ -8,13 +8,9 @@ import {
   MapShape, MapData, ShapeType, RoomCategory,
   categoryLabels, categoryColors, categoryDefaults,
 } from "@/types/map";
+import { getInstitutes, Institute } from "@/lib/api";
 
 const MapCanvas = dynamic(() => import("@/components/admin/MapCanvas"), { ssr: false });
-
-const mockInstitutes = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
-];
 
 const FLOORS = [1, 2, 3];
 const CATEGORIES = Object.keys(categoryLabels) as RoomCategory[];
@@ -24,7 +20,7 @@ const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
   { type: "triangle", label: "Triângulo" },
 ];
 
-const storageKey = (instituteId: number, floor: number) => `map_${instituteId}_floor_${floor}`;
+const storageKey = (instituteId: string, floor: number) => `map_${instituteId}_floor_${floor}`;
 
 interface ModalProps {
   title: string;
@@ -66,7 +62,8 @@ function Modal({ title, description, confirmLabel, confirmClass, onConfirm, onCa
 }
 
 export default function CadastrarMapaPage() {
-  const [selectedInstitute, setSelectedInstitute] = useState(mockInstitutes[0]);
+  const [institutes, setInstitutes]               = useState<Institute[]>([]);
+  const [selectedInstitute, setSelectedInstitute] = useState<Institute | null>(null);
   const [selectedFloor, setSelectedFloor]         = useState(1);
   const [shapes, setShapes]                       = useState<MapShape[]>([]);
   const [history, setHistory]                     = useState<MapShape[][]>([]);
@@ -78,7 +75,7 @@ export default function CadastrarMapaPage() {
   const [floorOpen, setFloorOpen]                 = useState(false);
   const [categoryOpen, setCategoryOpen]           = useState(false);
   const [showSaveModal, setShowSaveModal]         = useState(false);
-  const [pendingNav, setPendingNav]               = useState<{ institute?: typeof mockInstitutes[0]; floor?: number } | null>(null);
+  const [pendingNav, setPendingNav]               = useState<{ institute?: Institute; floor?: number } | null>(null);
 
   const instituteRef = useRef<HTMLDivElement>(null);
   const floorRef     = useRef<HTMLDivElement>(null);
@@ -189,7 +186,16 @@ export default function CadastrarMapaPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  const loadMap = (instituteId: number, floor: number) => {
+  useEffect(() => {
+    getInstitutes()
+      .then((data) => {
+        setInstitutes(data);
+        if (data.length > 0) setSelectedInstitute(data[0]);
+      })
+      .catch(() => setInstitutes([]));
+  }, []);
+
+  const loadMap = (instituteId: string, floor: number) => {
     const stored = localStorage.getItem(storageKey(instituteId, floor));
     if (stored) {
       try { setShapes((JSON.parse(stored) as MapData).shapes); }
@@ -204,10 +210,11 @@ export default function CadastrarMapaPage() {
   };
 
   useEffect(() => {
+    if (!selectedInstitute) return;
     loadMap(selectedInstitute.id, selectedFloor);
   }, [selectedInstitute, selectedFloor]);
 
-  const tryChangeContext = (institute?: typeof mockInstitutes[0], floor?: number) => {
+  const tryChangeContext = (institute?: Institute, floor?: number) => {
     if (isDirty) {
       setPendingNav({ institute, floor });
     } else {
@@ -215,7 +222,7 @@ export default function CadastrarMapaPage() {
     }
   };
 
-  const applyContextChange = (institute?: typeof mockInstitutes[0], floor?: number) => {
+  const applyContextChange = (institute?: Institute, floor?: number) => {
     if (institute) setSelectedInstitute(institute);
     if (floor)     setSelectedFloor(floor);
     setPendingNav(null);
@@ -261,6 +268,7 @@ export default function CadastrarMapaPage() {
   };
 
   const handleSaveConfirm = () => {
+    if (!selectedInstitute) return;
     const data: MapData = {
       institute_id: selectedInstitute.id,
       institute_name: selectedInstitute.name,
@@ -286,7 +294,7 @@ export default function CadastrarMapaPage() {
       {showSaveModal && (
         <Modal
           title="Salvar mapa"
-          description={`Deseja salvar o mapa do ${selectedInstitute.name} — Piso ${selectedFloor}?`}
+          description={`Deseja salvar o mapa do ${selectedInstitute?.name ?? ""} — Piso ${selectedFloor}?`}
           confirmLabel="Salvar"
           confirmClass="bg-indigo-900 hover:bg-indigo-800"
           onConfirm={handleSaveConfirm}
@@ -319,12 +327,12 @@ export default function CadastrarMapaPage() {
                 className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-white"
               >
                 <Building2 size={14} className="text-gray-400" />
-                {selectedInstitute.name}
+                {selectedInstitute?.name ?? "Selecione o instituto"}
                 <ChevronDown size={14} className="text-gray-400" />
               </button>
               {instituteOpen && (
                 <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
-                  {mockInstitutes.map((inst) => (
+                  {institutes.map((inst) => (
                     <li
                       key={inst.id}
                       onClick={() => { tryChangeContext(inst, undefined); setInstituteOpen(false); }}

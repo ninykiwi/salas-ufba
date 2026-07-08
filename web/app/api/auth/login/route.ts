@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8000";
+const BFF_URL = process.env.BFF_INTERNAL_URL ?? "http://bff:8000";
 
 export async function POST(request: NextRequest) {
-  const body = await request.text();
-
   const upstream = await fetch(`${BFF_URL}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: request.headers.get("cookie") ?? "",
+    },
+    body: await request.text(),
   });
 
   const data = await upstream.text();
-  return new NextResponse(data, {
+  const nextResponse = new NextResponse(data, {
     status: upstream.status,
     headers: { "Content-Type": "application/json" },
   });
+
+  const setCookie = upstream.headers.get("set-cookie");
+  if (setCookie) nextResponse.headers.set("set-cookie", setCookie);
+
+  return nextResponse;
 }

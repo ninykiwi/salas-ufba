@@ -1,37 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BFF_URL = process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8000";
+const BFF_URL = process.env.BFF_INTERNAL_URL ?? "http://bff:8000";
 
 export async function GET(request: NextRequest) {
-  const authorization = request.headers.get("authorization");
-
   const upstream = await fetch(`${BFF_URL}/institutes`, {
-    headers: authorization ? { Authorization: authorization } : {},
+    headers: {
+      Cookie: request.headers.get("cookie") ?? "",
+    },
   });
 
   const data = await upstream.text();
-  return new NextResponse(data, {
+  const nextResponse = new NextResponse(data, {
     status: upstream.status,
     headers: { "Content-Type": "application/json" },
   });
+
+  const setCookie = upstream.headers.get("set-cookie");
+  if (setCookie) nextResponse.headers.set("set-cookie", setCookie);
+
+  return nextResponse;
 }
 
 export async function POST(request: NextRequest) {
-  const authorization = request.headers.get("authorization");
-  const body = await request.text();
-
   const upstream = await fetch(`${BFF_URL}/institutes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(authorization ? { Authorization: authorization } : {}),
+      Cookie: request.headers.get("cookie") ?? "",
     },
-    body,
+    body: await request.text(),
   });
 
   const data = await upstream.text();
-  return new NextResponse(data, {
+  const nextResponse = new NextResponse(data, {
     status: upstream.status,
     headers: { "Content-Type": "application/json" },
   });
+
+  const setCookie = upstream.headers.get("set-cookie");
+  if (setCookie) nextResponse.headers.set("set-cookie", setCookie);
+
+  return nextResponse;
 }

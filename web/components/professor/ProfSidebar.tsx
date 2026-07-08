@@ -1,6 +1,9 @@
-import { LayoutGrid, ClipboardClock, UserPlus, Monitor, ClipboardPen } from "lucide-react";
+"use client";
+
+import { LayoutGrid, ClipboardClock, UserPlus, Monitor, ClipboardPen, Home, LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   label: string;
@@ -12,7 +15,6 @@ const navItems: NavItem[] = [
   { label: "Visão Geral", href: "/professor", icon: <LayoutGrid size={18} /> },
   { label: "Cadastrar Eventos", href: "/professor/cadastrar-evento", icon: <ClipboardPen size={18} /> },
   { label: "Minhas Solicitações", href: "/professor/minhas-solicitacoes", icon: <ClipboardClock size={18} /> },
-  { label: "TV Display", href: "/view", icon: <Monitor size={18} /> },
 ];
 
 interface ProfSidebarProps {
@@ -20,6 +22,8 @@ interface ProfSidebarProps {
 }
 
 export default function ProfSidebar({ activeHref = "/" }: ProfSidebarProps) {
+  const { logout } = useAuth();
+
   return (
     <aside className="w-60 h-full bg-white border-r border-gray-200 flex flex-col">
 
@@ -52,6 +56,23 @@ export default function ProfSidebar({ activeHref = "/" }: ProfSidebarProps) {
           );
         })}
       </nav>
+
+      <div className="px-3 py-4 border-t border-gray-200 flex flex-col gap-1">
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+        >
+          <Home size={18} />
+          Ir para Home
+        </Link>
+        <button
+          onClick={logout}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
+        >
+          <LogOut size={18} />
+          Sair
+        </button>
+      </div>
 
     </aside>
   );

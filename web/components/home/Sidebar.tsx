@@ -1,5 +1,8 @@
-import { LayoutGrid, CalendarDays, Map, Monitor } from "lucide-react";
+"use client";
+
+import { LayoutGrid, CalendarDays, Map, Monitor, LogOut } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   label: string;
@@ -19,7 +22,16 @@ interface SidebarProps {
   activeHref?: string;
 }
 
+const authButtonByRole: Record<string, { label: string; href: string }> = {
+  ADMIN: { label: "Painel Admin", href: "/admin" },
+  SUPERADMIN: { label: "Painel Super Admin", href: "/super-admin/logs" },
+  PROFESSOR: { label: "Painel Professor", href: "/professor" },
+};
+
 export default function Sidebar({ activeHref = "/" }: SidebarProps) {
+  const { user, logout } = useAuth();
+  const authButton = user && authButtonByRole[user.role];
+
   return (
     <aside className="w-60 h-full bg-white border-r border-gray-200 flex flex-col">
 
@@ -53,14 +65,33 @@ export default function Sidebar({ activeHref = "/" }: SidebarProps) {
         })}
       </nav>
 
-      <div className="px-4 py-6">
-        <Link
-          href="/login"
-          className="block w-full bg-[#000666] hover:bg-[#333784] text-white text-sm font-bold text-center py-3 rounded-lg transition-colors"
-        >
-          LOGIN
-        </Link>
-      </div>
+      {authButton ? (
+        <div className="px-3 py-4 border-t border-gray-200 flex flex-col gap-1">
+          <Link
+            href={authButton.href}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+          >
+            <LayoutGrid size={18} />
+            {authButton.label}
+          </Link>
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm w-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
+          >
+            <LogOut size={18} />
+            Sair
+          </button>
+        </div>
+      ) : (
+        <div className="px-4 py-6">
+          <Link
+            href="/login"
+            className="block w-full bg-[#000666] hover:bg-[#333784] text-white text-sm font-bold text-center py-3 rounded-lg transition-colors"
+          >
+            LOGIN
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }
