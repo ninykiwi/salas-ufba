@@ -241,12 +241,21 @@ export async function createInstitute(
   return handleResponse<Institute>(response);
 }
 
-export async function deleteInstitute(id: string): Promise<void> {
+export interface DeleteInstituteResponse {
+  hasLinkedUsers: boolean;
+  hasLinkedRooms: boolean;
+  linkedUsersCount: number;
+  linkedRoomsCount: number;
+}
+
+export async function deleteInstitute(
+  id: string
+): Promise<DeleteInstituteResponse> {
   const response = await fetch(`/api/institutes/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
-  return handleResponse<void>(response);
+  return handleResponse<DeleteInstituteResponse>(response);
 }
 
 export async function getUsers(): Promise<ApiUser[]> {
@@ -406,4 +415,26 @@ export async function deleteSchedule(id: string): Promise<void> {
     credentials: "include",
   });
   return handleResponse<void>(response);
+}
+
+export interface AuditLog {
+  id: string;
+  admin_id: string;
+  admin_name: string;
+  admin_role: string;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  description: string;
+  created_at: string;
+}
+
+export async function getLogs(params?: {
+  admin_id?: string;
+  resource_type?: string;
+}): Promise<AuditLog[]> {
+  const response = await fetch(`/api/logs${buildQueryString(params)}`, {
+    credentials: "include",
+  });
+  return handleResponse<AuditLog[]>(response);
 }

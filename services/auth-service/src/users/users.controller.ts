@@ -98,7 +98,11 @@ export class UsersController {
       }
     }
 
-    return this.usersService.update(id, body);
+    return this.usersService.update(id, body, {
+      id: requester.id,
+      name: requester.name,
+      role: requester.role,
+    });
   }
 
   @Delete(':id')
@@ -146,6 +150,10 @@ export class UsersController {
       }
     }
 
-    await this.usersService.delete(id);
+    await this.usersService.delete(id, {
+      id: requester.id,
+      name: requester.name,
+      role: requester.role,
+    });
   }
 }

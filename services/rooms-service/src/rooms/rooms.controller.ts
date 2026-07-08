@@ -51,6 +51,14 @@ export class RoomsController {
     return this.roomsService.update(id, dto);
   }
 
+  @Delete('by-institute/:institute_id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeByInstitute(@Param('institute_id') institute_id: string) {
+    await this.roomsService.removeByInstitute(institute_id);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN)

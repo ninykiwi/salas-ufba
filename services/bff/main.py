@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import auth, institutes, rooms, schedules, users
+from routers import auth, institutes, logs, rooms, schedules, users
 
 app = FastAPI(title="Salas UFBA BFF")
 
@@ -18,3 +18,4 @@ app.include_router(institutes.router)
 app.include_router(users.router)
 app.include_router(rooms.router)
 app.include_router(schedules.router)
+app.include_router(logs.router)

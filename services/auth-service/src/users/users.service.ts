@@ -2,19 +2,32 @@ import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { AuditService } from '../audit/audit.service';
+
+interface Actor {
+  id: string;
+  name: string;
+  role: string;
+}
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
-  async create(data: {
-    name: string;
-    email: string;
-    siape?: string;
-    password: string;
-    role: Role;
-    instituteIds?: string[];
-  }): Promise<Omit<User, 'password'>> {
+  async create(
+    data: {
+      name: string;
+      email: string;
+      siape?: string;
+      password: string;
+      role: Role;
+      instituteIds?: string[];
+    },
+    actor: Actor,
+  ): Promise<Omit<User, 'password'>> {
     // Check if email already exists
     const existingEmail = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -54,6 +67,17 @@ export class UsersService {
     });
 
     const { password, ...result } = user;
+
+    await this.auditService.log({
+      admin_id: actor.id,
+      admin_name: actor.name,
+      admin_role: actor.role,
+      action: 'CREATE_USER',
+      resource_type: 'usuario',
+      resource_id: result.id,
+      description: `Criou o usuário ${result.name} (${result.email})`,
+    });
+
     return result;
   }
 
@@ -138,6 +162,7 @@ export class UsersService {
       role?: Role;
       instituteIds?: string[];
     },
+    actor: Actor,
   ): Promise<Omit<User, 'password'>> {
     // Check conflicts
     if (data.email) {
@@ -179,12 +204,37 @@ export class UsersService {
     });
 
     const { password, ...result } = user;
+
+    await this.auditService.log({
+      admin_id: actor.id,
+      admin_name: actor.name,
+      admin_role: actor.role,
+      action: 'UPDATE_USER',
+      resource_type: 'usuario',
+      resource_id: result.id,
+      description: `Editou o usuário ${result.name}`,
+    });
+
     return result;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, actor: Actor): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
     await this.prisma.user.delete({
       where: { id },
     });
+
+    if (user) {
+      await this.auditService.log({
+        admin_id: actor.id,
+        admin_name: actor.name,
+        admin_role: actor.role,
+        action: 'DELETE_USER',
+        resource_type: 'usuario',
+        resource_id: id,
+        description: `Removeu o usuário ${user.name} (${user.email})`,
+      });
+    }
   }
 }

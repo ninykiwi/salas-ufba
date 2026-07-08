@@ -13,6 +13,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { generateOccurrenceDates } from './utils/recurrence';
 import { todayInBahia } from './utils/today';
 import { AuthenticatedUser } from '../auth/jwt.strategy';
+import { RoomsService } from '../rooms/rooms.service';
 
 const MAX_OCCURRENCES = 60;
 
@@ -20,9 +21,17 @@ const MAX_OCCURRENCES = 60;
 export class SchedulesService {
   constructor(
     @InjectModel(Schedule.name) private scheduleModel: Model<ScheduleDocument>,
+    private roomsService: RoomsService,
   ) {}
 
   async create(dto: CreateScheduleDto, user: AuthenticatedUser) {
+    const room = await this.roomsService.findOne(dto.room_id);
+    if (dto.expected_audience > room.capacity) {
+      throw new BadRequestException(
+        'O público estimado excede a capacidade máxima da sala',
+      );
+    }
+
     const { recurrence_end_date, ...rest } = dto;
     const base = {
       ...rest,
@@ -105,6 +114,16 @@ export class SchedulesService {
         (schedule as unknown as Record<string, unknown>)[key] = value;
       }
     }
+
+    if (dto.expected_audience !== undefined) {
+      const room = await this.roomsService.findOne(schedule.room_id);
+      if (schedule.expected_audience > room.capacity) {
+        throw new BadRequestException(
+          'O público estimado excede a capacidade máxima da sala',
+        );
+      }
+    }
+
     return schedule.save();
   }
 

@@ -6,7 +6,7 @@ import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle, Trash2, ChevronDown } from "lucide-react";
-import { getInstitutes, createInstitute, deleteInstitute, getUsers, ApiError } from "@/lib/api";
+import { getInstitutes, createInstitute, deleteInstitute, getUsers, getRooms, ApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Institute {
@@ -45,6 +45,7 @@ export default function GestaoInstitutos() {
   // Estados do modal de exclusão
   const [deleteTarget, setDeleteTarget] = useState<Institute | null>(null);
   const [linkedUsersCount, setLinkedUsersCount] = useState(0);
+  const [linkedRoomsCount, setLinkedRoomsCount] = useState(0);
   const [confirmChecked, setConfirmChecked] = useState(false);
   const [isCheckingLinkedUsers, setIsCheckingLinkedUsers] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -98,14 +99,18 @@ export default function GestaoInstitutos() {
     setIsCheckingLinkedUsers(true);
 
     try {
-      const users = await getUsers();
-      const count = users.filter((u) =>
+      const [users, rooms] = await Promise.all([
+        getUsers(),
+        getRooms({ institute_id: institute.id }),
+      ]);
+      const usersCount = users.filter((u) =>
         u.institutes.some((inst) => inst.id === institute.id)
       ).length;
-      setLinkedUsersCount(count);
+      setLinkedUsersCount(usersCount);
+      setLinkedRoomsCount(rooms.length);
       setDeleteTarget(institute);
     } catch (err: any) {
-      setError(err.message || "Não foi possível verificar usuários vinculados.");
+      setError(err.message || "Não foi possível verificar dados vinculados.");
     } finally {
       setIsCheckingLinkedUsers(false);
     }
@@ -312,17 +317,25 @@ export default function GestaoInstitutos() {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl border border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir instituto</h3>
 
-            {linkedUsersCount === 0 ? (
+            {linkedUsersCount === 0 && linkedRoomsCount === 0 ? (
               <p className="text-sm text-gray-500 mb-4">
                 Tem certeza que deseja excluir <strong>{deleteTarget.name}</strong>? Essa ação não
                 pode ser desfeita.
               </p>
             ) : (
               <>
-                <p className="text-sm text-gray-500 mb-4">
-                  O instituto <strong>{deleteTarget.name}</strong> possui {linkedUsersCount}{" "}
-                  usuário(s) vinculado(s). Ao excluir, esses usuários ficarão sem instituto.
-                </p>
+                <ul className="text-sm text-gray-500 mb-4 space-y-1 list-disc list-inside">
+                  {linkedUsersCount > 0 && (
+                    <li>
+                      {linkedUsersCount} usuário(s) vinculado(s) ficarão sem instituto.
+                    </li>
+                  )}
+                  {linkedRoomsCount > 0 && (
+                    <li>
+                      {linkedRoomsCount} sala(s) vinculada(s) serão removidas do sistema.
+                    </li>
+                  )}
+                </ul>
                 <label className="flex items-center gap-2 text-sm text-gray-700 mb-4 select-none cursor-pointer">
                   <input
                     type="checkbox"
@@ -351,7 +364,10 @@ export default function GestaoInstitutos() {
               </button>
               <button
                 onClick={handleConfirmDelete}
-                disabled={isDeleting || (linkedUsersCount > 0 && !confirmChecked)}
+                disabled={
+                  isDeleting ||
+                  ((linkedUsersCount > 0 || linkedRoomsCount > 0) && !confirmChecked)
+                }
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting && <Loader2 className="animate-spin" size={16} />}

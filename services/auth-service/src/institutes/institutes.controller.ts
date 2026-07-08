@@ -8,8 +8,6 @@ import {
   UseGuards,
   Request,
   ForbiddenException,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { InstitutesService } from './institutes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -29,7 +27,11 @@ export class InstitutesController {
         'Apenas superadministradores podem cadastrar institutos',
       );
     }
-    return this.institutesService.create(body);
+    return this.institutesService.create(body, {
+      id: req.user.id,
+      name: req.user.name,
+      role: req.user.role,
+    });
   }
 
   @Get()
@@ -39,7 +41,6 @@ export class InstitutesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Request() req, @Param('id') id: string) {
     // Only SUPERADMIN can delete institutes
     if (req.user.role !== Role.SUPERADMIN) {
@@ -47,6 +48,10 @@ export class InstitutesController {
         'Apenas superadministradores podem excluir institutos',
       );
     }
-    await this.institutesService.remove(id);
+    return this.institutesService.remove(id, req.headers.authorization, {
+      id: req.user.id,
+      name: req.user.name,
+      role: req.user.role,
+    });
   }
 }

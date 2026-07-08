@@ -1,60 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import Footer from "@/components/home/Footer";
-import { Search, Shield } from "lucide-react";
-
-interface LogEntry {
-  id: number;
-  admin: string;
-  role: string;
-  action: string;
-  resourceType: string;
-  description: string;
-  createdAt: string;
-}
-
-const mockLogs: LogEntry[] = [
-  { id: 1,  admin: "João Silva",    role: "ADMIN",      action: "ACCEPT_REQUEST", resourceType: "solicitação", description: "Aceitou reserva do Lab 1 por Prof. Ricardo",       createdAt: "2026-06-10 10:32" },
-  { id: 2,  admin: "Maria Souza",   role: "ADMIN",      action: "REJECT_REQUEST", resourceType: "solicitação", description: "Recusou troca de Sala 101 por Profa. Ana",          createdAt: "2026-06-10 10:15" },
-  { id: 3,  admin: "João Silva",    role: "ADMIN",      action: "EDIT_MAP",       resourceType: "mapa",        description: "Editou planta baixa do IC: Piso 2",               createdAt: "2026-06-10 09:50" },
-  { id: 4,  admin: "Carlos Lima",   role: "SUPERADMIN", action: "CREATE_USER",    resourceType: "usuário",     description: "Criou conta de admin para Maria Souza",            createdAt: "2026-06-10 09:20" },
-  { id: 5,  admin: "Maria Souza",   role: "ADMIN",      action: "EDIT_ROOM",      resourceType: "sala",        description: "Editou capacidade da Sala 102 para 45 pessoas",    createdAt: "2026-06-10 08:55" },
-  { id: 6,  admin: "João Silva",    role: "ADMIN",      action: "ACCEPT_REQUEST", resourceType: "solicitação", description: "Aceitou empréstimo do Lab 203 por Profa. Carla",    createdAt: "2026-06-09 17:40" },
-  { id: 7,  admin: "Carlos Lima",   role: "SUPERADMIN", action: "DELETE_USER",    resourceType: "usuário",     description: "Removeu conta de admin inativo",                   createdAt: "2026-06-09 16:10" },
-  { id: 8,  admin: "Maria Souza",   role: "ADMIN",      action: "CREATE_ROOM",    resourceType: "sala",        description: "Cadastrou nova sala: Sala 305",                    createdAt: "2026-06-09 14:30" },
-  { id: 9,  admin: "João Silva",    role: "ADMIN",      action: "EDIT_MAP",       resourceType: "mapa",        description: "Editou planta baixa do IC: Piso 1",               createdAt: "2026-06-09 13:00" },
-  { id: 10, admin: "Carlos Lima",   role: "SUPERADMIN", action: "LOGIN",          resourceType: "sistema",     description: "Login realizado",                                  createdAt: "2026-06-09 08:00" },
-];
+import { Search, Shield, Loader2 } from "lucide-react";
+import { getLogs, ApiError, AuditLog } from "@/lib/api";
 
 const actionLabels: Record<string, { label: string; className: string }> = {
-  ACCEPT_REQUEST: { label: "Aceitou solicitação", className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  REJECT_REQUEST: { label: "Recusou solicitação", className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  EDIT_MAP:       { label: "Editou mapa",         className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  CREATE_USER:    { label: "Criou usuário",        className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  DELETE_USER:    { label: "Removeu usuário",      className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  EDIT_ROOM:      { label: "Editou sala",          className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  CREATE_ROOM:    { label: "Criou sala",           className: "bg-gray-100 text-gray-600 border border-gray-200" },
-  LOGIN:          { label: "Login",                className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  CREATE_USER: { label: "Criou usuário", className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  UPDATE_USER: { label: "Editou usuário", className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  DELETE_USER: { label: "Removeu usuário", className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  CREATE_INSTITUTE: { label: "Criou instituto", className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  DELETE_INSTITUTE: { label: "Removeu instituto", className: "bg-gray-100 text-gray-600 border border-gray-200" },
+  LOGIN: { label: "Login", className: "bg-gray-100 text-gray-600 border border-gray-200" },
 };
 
+function formatDateTimeBR(isoString: string): string {
+  return new Date(isoString).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function LogsPage() {
+  const router = useRouter();
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [filterResource, setFilterResource] = useState("todos");
 
-  const resources = ["todos", "solicitação", "mapa", "sala", "usuário", "sistema"];
+  const resources = ["todos", "usuario", "instituto", "sistema"];
 
-  const filtered = mockLogs.filter((log) => {
-    const matchSearch = log.admin.toLowerCase().includes(search.toLowerCase()) ||
-                        log.description.toLowerCase().includes(search.toLowerCase());
-    const matchResource = filterResource === "todos" || log.resourceType === filterResource;
+  useEffect(() => {
+    getLogs()
+      .then(setLogs)
+      .catch((err) => {
+        if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+          router.push("/login");
+          return;
+        }
+        setError(err.message || "Não foi possível carregar os logs.");
+      })
+      .finally(() => setIsLoading(false));
+  }, [router]);
+
+  const filtered = logs.filter((log) => {
+    const matchSearch =
+      log.admin_name.toLowerCase().includes(search.toLowerCase()) ||
+      log.description.toLowerCase().includes(search.toLowerCase());
+    const matchResource = filterResource === "todos" || log.resource_type === filterResource;
     return matchSearch && matchResource;
   });
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <AdminSidebar activeHref="/admin/logs" />
+      <AdminSidebar activeHref="/super-admin/logs" />
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="px-8 py-5 bg-white border-b border-gray-200 flex items-center justify-between">
@@ -98,6 +103,12 @@ export default function LogsPage() {
         </div>
 
         <main className="flex-1 overflow-y-auto px-8 py-6">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs font-semibold">
+              {error}
+            </div>
+          )}
+
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
@@ -110,7 +121,16 @@ export default function LogsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filtered.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-10 text-center text-gray-400">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="animate-spin text-[#000666]" size={28} />
+                        <p className="text-sm">Carregando logs...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">
                       Nenhum log encontrado.
@@ -122,8 +142,8 @@ export default function LogsPage() {
                     return (
                       <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-3">
-                          <p className="font-semibold text-gray-900">{log.admin}</p>
-                          <p className="text-xs text-gray-400">{log.role}</p>
+                          <p className="font-semibold text-gray-900">{log.admin_name}</p>
+                          <p className="text-xs text-gray-400">{log.admin_role}</p>
                         </td>
                         <td className="px-5 py-3">
                           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${action.className}`}>
@@ -132,9 +152,9 @@ export default function LogsPage() {
                         </td>
                         <td className="px-5 py-3 text-gray-600 max-w-xs">{log.description}</td>
                         <td className="px-5 py-3">
-                          <span className="text-xs text-gray-500 capitalize">{log.resourceType}</span>
+                          <span className="text-xs text-gray-500 capitalize">{log.resource_type}</span>
                         </td>
-                        <td className="px-5 py-3 text-gray-400 text-xs whitespace-nowrap">{log.createdAt}</td>
+                        <td className="px-5 py-3 text-gray-400 text-xs whitespace-nowrap">{formatDateTimeBR(log.created_at)}</td>
                       </tr>
                     );
                   })
