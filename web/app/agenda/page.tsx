@@ -19,8 +19,8 @@ interface Event {
 
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
 const mockInstitutes = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
+  { id: "1", name: "Instituto de Computação" },
+  { id: "2", name: "Faculdade de Direito" },
 ];
 
 const COLOR_MAP = {
@@ -33,7 +33,7 @@ const DIAS_DA_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
 export default function Home() {
   const [selectedCampus, setSelectedCampus] = useState<number | null>(1);
-  const [selectedInstitute, setSelectedInstitute] = useState<number | null>(1);
+  const [selectedInstitute, setSelectedInstitute] = useState<string | null>("1");
   const [showFilters, setShowFilters] = useState(false);
   const [startDateInput, setStartDateInput] = useState("");
   const [baseDate, setBaseDate] = useState(() => new Date());
@@ -79,12 +79,11 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 text-gray-800">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeHref="/agenda" />
+    <div className="flex h-screen bg-gray-50 text-gray-800">
+      <Sidebar activeHref="/agenda" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <TopBar
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <TopBar
             campuses={mockCampuses} selectedCampus={selectedCampus} onCampusChange={setSelectedCampus}
             institutes={mockInstitutes} selectedInstitute={selectedInstitute} onInstituteChange={setSelectedInstitute}
           />
@@ -94,7 +93,7 @@ export default function Home() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Agenda Completa</h1>
-                <p className="text-sm text-gray-500 mt-1">Acompanhe a disponibilidade das salas do IC.</p>
+                <p className="text-sm text-gray-500 mt-1">Acompanhe a disponibilidade das salas do instituto.</p>
               </div>
               
               <div className="relative flex items-center gap-3">
@@ -203,9 +202,9 @@ export default function Home() {
               </div>
             </div>
           </main>
+
+          <Footer />
         </div>
-      </div>
-      <Footer />
     </div>
   );
 }

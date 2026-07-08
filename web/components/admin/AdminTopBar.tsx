@@ -2,15 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bell, Info, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
 import NotificationsModal from "./NotificationsModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminTopBar() {
     const [time, setTime] = useState("");
     const [dateLabel, setDateLabel] = useState("");
-    const [user, setUser] = useState<any>(null);
-    const router = useRouter();
-    
+    const { user, logout } = useAuth();
+
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
 
@@ -21,16 +20,6 @@ export default function AdminTopBar() {
     ]);
 
     useEffect(() => {
-        // Load user from localStorage on client side
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (e) {
-                console.error("Failed to parse user session", e);
-            }
-        }
-
         const update = () => {
             const now = new Date();
             setTime(now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
@@ -52,12 +41,6 @@ export default function AdminTopBar() {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    const handleLogout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user");
-        router.push("/login");
-    };
 
     return (
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
@@ -130,7 +113,7 @@ export default function AdminTopBar() {
 
                 {/* Botão de Logout */}
                 <button 
-                    onClick={handleLogout}
+                    onClick={logout}
                     title="Sair do sistema"
                     className="text-gray-400 hover:text-red-600 transition-colors focus:outline-none"
                 >

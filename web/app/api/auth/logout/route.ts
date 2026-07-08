@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BFF_URL = process.env.BFF_INTERNAL_URL ?? "http://bff:8000";
 
-export async function GET(request: NextRequest) {
-  const upstream = await fetch(`${BFF_URL}/auth/me`, {
+export async function POST(request: NextRequest) {
+  const upstream = await fetch(`${BFF_URL}/auth/logout`, {
+    method: "POST",
     headers: {
       Cookie: request.headers.get("cookie") ?? "",
     },

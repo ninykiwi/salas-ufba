@@ -24,12 +24,6 @@ export default function GestaoUsuarios() {
   const router = useRouter();
 
   const fetchData = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     try {
       const usersData = await getUsers();
 
@@ -96,14 +90,13 @@ export default function GestaoUsuarios() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/super-admin/usuarios" />
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar activeHref="/super-admin/usuarios" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminTopBar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
 
-          <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
             
             {/* Header da Página */}
             <div className="flex justify-between items-start mb-8">
@@ -141,8 +134,9 @@ export default function GestaoUsuarios() {
             )}
 
           </main>
+
+          <Footer />
         </div>
-      </div>
 
       {/* Componente Único de Modais */}
       <AdminUserModals
@@ -154,8 +148,6 @@ export default function GestaoUsuarios() {
         institutes={institutes}
         onUserUpdated={fetchData}
       />
-
-      <Footer />
     </div>
   );
 }

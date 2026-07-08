@@ -41,14 +41,13 @@ export default function Home() {
   const [selectedInstitute, setSelectedInstitute] = useState<number | null>(1);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <AdminSidebar activeHref="/salas" />
+    <div className="flex h-screen bg-gray-50">
+      <AdminSidebar activeHref="/salas" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <AdminTopBar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
 
-          <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="mb-8">
               <nav className="flex text-sm font-medium text-gray-500 mb-2">
                 <span>Salas</span>
@@ -225,10 +224,9 @@ export default function Home() {
             </div>
 
           </main>
-        </div>
-      </div>
 
-      <Footer />
+          <Footer />
+        </div>
     </div>
   );
 }

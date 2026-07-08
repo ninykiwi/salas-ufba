@@ -20,7 +20,6 @@ export interface ApiUser {
 }
 
 export interface LoginResponse {
-  access_token: string;
   user: ApiUser;
 }
 
@@ -51,11 +50,6 @@ export class ApiError extends Error {
   }
 }
 
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
@@ -72,26 +66,36 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export async function login(
   email: string,
-  password: string
+  password: string,
+  keepConnected: boolean
 ): Promise<LoginResponse> {
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    credentials: "include",
+    body: JSON.stringify({ email, password, keepConnected }),
   });
   return handleResponse<LoginResponse>(response);
 }
 
+export async function logout(): Promise<void> {
+  await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
 export async function me(): Promise<ApiUser> {
   const response = await fetch("/api/auth/me", {
-    headers: authHeaders(),
+    credentials: "include",
   });
-  return handleResponse<ApiUser>(response);
+  const data = await handleResponse<{ user: ApiUser }>(response);
+  return data.user;
 }
 
 export async function getInstitutes(): Promise<Institute[]> {
   const response = await fetch("/api/institutes", {
-    headers: authHeaders(),
+    credentials: "include",
   });
   return handleResponse<Institute[]>(response);
 }
@@ -99,15 +103,24 @@ export async function getInstitutes(): Promise<Institute[]> {
 export async function createInstitute(name: string): Promise<Institute> {
   const response = await fetch("/api/institutes", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ name }),
   });
   return handleResponse<Institute>(response);
 }
 
+export async function deleteInstitute(id: string): Promise<void> {
+  const response = await fetch(`/api/institutes/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return handleResponse<void>(response);
+}
+
 export async function getUsers(): Promise<ApiUser[]> {
   const response = await fetch("/api/users", {
-    headers: authHeaders(),
+    credentials: "include",
   });
   return handleResponse<ApiUser[]>(response);
 }
@@ -117,7 +130,8 @@ export async function createUser(
 ): Promise<ApiUser> {
   const response = await fetch("/api/users", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data),
   });
   return handleResponse<ApiUser>(response);
@@ -129,7 +143,8 @@ export async function updateUser(
 ): Promise<ApiUser> {
   const response = await fetch(`/api/users/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(data),
   });
   return handleResponse<ApiUser>(response);
@@ -138,7 +153,7 @@ export async function updateUser(
 export async function deleteUser(id: string): Promise<void> {
   const response = await fetch(`/api/users/${id}`, {
     method: "DELETE",
-    headers: authHeaders(),
+    credentials: "include",
   });
   return handleResponse<void>(response);
 }

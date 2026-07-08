@@ -2,23 +2,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ChevronDown, Building2, Layers, BookOpen } from "lucide-react";
+import { ChevronDown, Building2, Layers, BookOpen, Loader2 } from "lucide-react";
 import Sidebar from "@/components/home/Sidebar";
 import Footer from "@/components/home/Footer";
 import StatusBadge from "@/components/home/StatusBradge";
 import { MapShape, MapData } from "@/types/map";
+import { getInstitutes, Institute } from "@/lib/api";
 
 const MapViewCanvas = dynamic(() => import("@/components/mapa/MapViewCanvas"), { ssr: false });
-
-const mockInstitutes = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
-];
 
 const FLOORS = [1, 2, 3];
 const ROOM_CATEGORIES = new Set(["sala_aula", "auditorio"]);
 
-const storageKey = (instituteId: number, floor: number) => `map_${instituteId}_floor_${floor}`;
+const storageKey = (instituteId: string, floor: number) => `map_${instituteId}_floor_${floor}`;
 
 interface RoomEvent {
   title: string;
@@ -45,7 +41,8 @@ const contentAccent: Record<string, string> = {
 };
 
 export default function MapaPage() {
-  const [selectedInstitute, setSelectedInstitute] = useState(mockInstitutes[0]);
+  const [institutes, setInstitutes]               = useState<Institute[]>([]);
+  const [selectedInstitute, setSelectedInstitute] = useState<Institute | null>(null);
   const [selectedFloor, setSelectedFloor]         = useState(1);
   const [shapes, setShapes]                       = useState<MapShape[]>([]);
   const [selectedId, setSelectedId]               = useState<string | null>(null);
@@ -67,6 +64,15 @@ export default function MapaPage() {
   }, []);
 
   useEffect(() => {
+    getInstitutes()
+      .then((data) => {
+        setInstitutes(data);
+        if (data.length > 0) setSelectedInstitute(data[0]);
+      })
+      .catch(() => setInstitutes([]));
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) setInstituteOpen(false);
       if (floorRef.current     && !floorRef.current.contains(e.target as Node))     setFloorOpen(false);
@@ -76,6 +82,7 @@ export default function MapaPage() {
   }, []);
 
   useEffect(() => {
+    if (!selectedInstitute) return;
     const stored = localStorage.getItem(storageKey(selectedInstitute.id, selectedFloor));
     if (stored) {
       try { setShapes((JSON.parse(stored) as MapData).shapes); }
@@ -96,15 +103,14 @@ export default function MapaPage() {
   const isOccupied       = selectedShape ? occupiedIds.has(selectedShape.id) : false;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeHref="/mapa" />
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar activeHref="/mapa" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="px-8 py-5 bg-white border-b border-gray-200 flex items-center justify-between">
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="px-8 py-5 bg-white border-b border-gray-200 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-gray-900">Mapa do Campus</h1>
-              <p className="text-sm text-gray-400 mt-0.5">Acompanhe a disponibilidade das salas do IC.</p>
+              <p className="text-sm text-gray-400 mt-0.5">Acompanhe a disponibilidade das salas do instituto.</p>
             </div>
 
             <div className="flex items-center gap-3">
@@ -114,12 +120,12 @@ export default function MapaPage() {
                   className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-white"
                 >
                   <Building2 size={14} className="text-gray-400" />
-                  {selectedInstitute.name}
+                  {selectedInstitute?.name ?? "Selecione o instituto"}
                   <ChevronDown size={14} className="text-gray-400" />
                 </button>
                 {instituteOpen && (
                   <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
-                    {mockInstitutes.map((inst) => (
+                    {institutes.map((inst) => (
                       <li
                         key={inst.id}
                         onClick={() => { setSelectedInstitute(inst); setInstituteOpen(false); }}
@@ -236,9 +242,9 @@ export default function MapaPage() {
               )}
             </div>
           </div>
+
+          <Footer />
         </div>
-      </div>
-      <Footer />
     </div>
   );
 }

@@ -7,9 +7,9 @@ interface TopBarProps {
   campuses: { id: number; name: string }[];
   selectedCampus: number | null;
   onCampusChange: (id: number) => void;
-  institutes: { id: number; name: string }[];
-  selectedInstitute: number | null;
-  onInstituteChange: (id: number) => void;
+  institutes: { id: string; name: string }[];
+  selectedInstitute: string | null;
+  onInstituteChange: (id: string) => void;
 }
 
 export default function TopBar({

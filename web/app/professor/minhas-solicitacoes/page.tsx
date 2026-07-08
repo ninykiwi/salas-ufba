@@ -62,14 +62,13 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <div className="flex flex-1 overflow-hidden">
-        <ProfSidebar activeHref="/minhas-solicitacoes" />
+    <div className="flex h-screen bg-gray-50">
+      <ProfSidebar activeHref="/minhas-solicitacoes" />
 
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <ProfTopBar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <ProfTopBar />
 
-          <main className="flex-1 overflow-y-auto px-8 py-6">
+        <main className="flex-1 overflow-y-auto px-8 py-6">
             <div className="mb-8">
               <h1 className="text-xl font-bold text-gray-900">Minhas Solicitações de Reserva</h1>
               <p className="text-sm text-gray-500 mt-1">
@@ -185,9 +184,9 @@ export default function Home() {
 
             </div>
           </main>
+
+          <Footer />
         </div>
-      </div>
-      <Footer />
     </div>
   );
 }

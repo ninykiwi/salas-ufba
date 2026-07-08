@@ -48,7 +48,7 @@ export interface MapShape {
 }
 
 export interface MapData {
-  institute_id: number;
+  institute_id: string;
   institute_name: string;
   floor: number;
   shapes: MapShape[];

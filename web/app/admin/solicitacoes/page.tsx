@@ -164,6 +164,8 @@ export default function SolicitacoesPage() {
             })
           )}
         </main>
+
+        <Footer />
       </div>
     </div>
   );
