@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, ChevronDown, Pencil, Trash2 } from "lucide-react";
 
 export interface Usuario {
   id: string | number;
@@ -24,11 +24,32 @@ interface AdminUserTableProps {
   onDelete: (user: Usuario) => void;
 }
 
+const deptOptions = [
+  "Todos",
+  "Depto. de Ciência da Computação",
+  "Depto. de Matemática",
+  "Depto. de Física",
+  "Depto. de Estatística",
+];
+
 export default function AdminUserTable({ users, onEdit, onDelete }: AdminUserTableProps) {
   const [activeTab, setActiveTab] = useState<FilterTab>("Todos");
   const [selectedDept, setSelectedDept] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  const [deptOpen, setDeptOpen] = useState(false);
+  const deptRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (deptRef.current && !deptRef.current.contains(e.target as Node)) {
+        setDeptOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredUsers = users.filter((user) => {
     const matchTab =
@@ -81,20 +102,35 @@ export default function AdminUserTable({ users, onEdit, onDelete }: AdminUserTab
 
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-500">Filtrar por Departamento:</span>
-          <select
-            value={selectedDept}
-            onChange={(e) => {
-              setSelectedDept(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#000666] focus:border-[#000666]"
-          >
-            <option value="Todos">Todos</option>
-            <option value="Depto. de Ciência da Computação">Depto. de Ciência da Computação</option>
-            <option value="Depto. de Matemática">Depto. de Matemática</option>
-            <option value="Depto. de Física">Depto. de Física</option>
-            <option value="Depto. de Estatística">Depto. de Estatística</option>
-          </select>
+          <div className="relative" ref={deptRef}>
+            <button
+              type="button"
+              onClick={() => setDeptOpen((v) => !v)}
+              className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#000666] transition-colors"
+            >
+              {selectedDept}
+              <ChevronDown size={14} className="text-gray-400" />
+            </button>
+            {deptOpen && (
+              <ul className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                {deptOptions.map((dept) => (
+                  <li
+                    key={dept}
+                    onClick={() => {
+                      setSelectedDept(dept);
+                      setCurrentPage(1);
+                      setDeptOpen(false);
+                    }}
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
+                      selectedDept === dept ? "text-[#000666] font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    {dept}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle, Trash2, ChevronDown } from "lucide-react";
 import { getInstitutes, createInstitute, deleteInstitute, getUsers, ApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,18 +13,34 @@ interface Institute {
   id: string;
   name: string;
   slug: string;
+  floors: number;
   createdAt: string;
 }
+
+const FLOOR_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1);
 
 export default function GestaoInstitutos() {
   const [institutes, setInstitutes] = useState<Institute[]>([]);
   const [newInstituteName, setNewInstituteName] = useState("");
+  const [newInstituteFloors, setNewInstituteFloors] = useState(1);
+  const [floorsOpen, setFloorsOpen] = useState(false);
+  const floorsRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (floorsRef.current && !floorsRef.current.contains(e.target as Node)) {
+        setFloorsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Estados do modal de exclusão
   const [deleteTarget, setDeleteTarget] = useState<Institute | null>(null);
@@ -63,9 +79,10 @@ export default function GestaoInstitutos() {
     setSuccess("");
 
     try {
-      const newInst = await createInstitute(newInstituteName.trim());
+      const newInst = await createInstitute(newInstituteName.trim(), newInstituteFloors);
       setInstitutes((prev) => [...prev, newInst].sort((a, b) => a.name.localeCompare(b.name)));
       setNewInstituteName("");
+      setNewInstituteFloors(1);
       setSuccess("Instituto cadastrado com sucesso!");
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
@@ -170,6 +187,39 @@ export default function GestaoInstitutos() {
                       disabled={isSubmitting}
                       className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none"
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-600 uppercase tracking-widest block">
+                      Quantidade de Andares
+                    </label>
+                    <div className="relative" ref={floorsRef}>
+                      <button
+                        type="button"
+                        onClick={() => setFloorsOpen((v) => !v)}
+                        disabled={isSubmitting}
+                        className="flex items-center justify-between gap-2 w-full bg-white border border-gray-300 rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors disabled:opacity-50"
+                      >
+                        {newInstituteFloors}
+                        <ChevronDown size={14} className="text-gray-400" />
+                      </button>
+                      {floorsOpen && (
+                        <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-50 overflow-y-auto">
+                          {FLOOR_OPTIONS.map((floor) => (
+                            <li
+                              key={floor}
+                              onClick={() => {
+                                setNewInstituteFloors(floor);
+                                setFloorsOpen(false);
+                              }}
+                              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                            >
+                              {floor}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
 
                   <button

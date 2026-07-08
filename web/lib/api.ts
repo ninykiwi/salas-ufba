@@ -7,6 +7,7 @@ export interface InstituteRef {
 }
 
 export interface Institute extends InstituteRef {
+  floors: number;
   createdAt: string;
 }
 
@@ -39,6 +40,133 @@ export interface UpdateUserPayload {
   password?: string;
   role?: Role;
   instituteIds?: string[];
+}
+
+export type RoomType =
+  | "sala_aula"
+  | "laboratorio"
+  | "auditorio"
+  | "sala_reuniao";
+export type RoomStatus = "ativa" | "inativa";
+
+export const ROOM_TYPES: { value: RoomType; label: string }[] = [
+  { value: "sala_aula", label: "Sala de Aula" },
+  { value: "laboratorio", label: "Laboratório" },
+  { value: "auditorio", label: "Auditório" },
+  { value: "sala_reuniao", label: "Sala de Reunião" },
+];
+
+export const ROOM_RESOURCES = [
+  "Ar Condicionado",
+  "Projetor",
+  "Quadro Branco",
+  "Computadores",
+  "Sistema de Áudio",
+  "Wi-Fi Dedicado",
+] as const;
+
+export interface Room {
+  _id: string;
+  name: string;
+  institute_id: string;
+  floor: string;
+  type: RoomType;
+  capacity: number;
+  resources: string[];
+  status: RoomStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateRoomPayload {
+  name: string;
+  institute_id: string;
+  floor: string;
+  type: RoomType;
+  capacity: number;
+  resources?: string[];
+  status?: RoomStatus;
+}
+
+export interface UpdateRoomPayload {
+  name?: string;
+  institute_id?: string;
+  floor?: string;
+  type?: RoomType;
+  capacity?: number;
+  resources?: string[];
+  status?: RoomStatus;
+}
+
+export type ScheduleCategory =
+  | "aula_regular"
+  | "defesa"
+  | "palestra"
+  | "reuniao"
+  | "minicurso";
+export type ScheduleRecurrence = "unico" | "semanal" | "quinzenal";
+export type ScheduleStatus = "pendente" | "confirmado" | "cancelado";
+
+export const SCHEDULE_CATEGORIES: { value: ScheduleCategory; label: string }[] = [
+  { value: "aula_regular", label: "Aula Regular" },
+  { value: "defesa", label: "Defesa" },
+  { value: "palestra", label: "Palestra" },
+  { value: "reuniao", label: "Reunião" },
+  { value: "minicurso", label: "Minicurso" },
+];
+
+export const SCHEDULE_RECURRENCES: { value: ScheduleRecurrence; label: string }[] = [
+  { value: "unico", label: "Único" },
+  { value: "semanal", label: "Semanal" },
+  { value: "quinzenal", label: "Quinzenal" },
+];
+
+export interface Schedule {
+  _id: string;
+  title: string;
+  category: ScheduleCategory;
+  professor_id: string;
+  professor_name: string;
+  room_id: string;
+  institute_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  expected_audience: number;
+  recurrence: ScheduleRecurrence;
+  equipment_requested: string[];
+  notes: string;
+  status: ScheduleStatus;
+  created_by: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateSchedulePayload {
+  title: string;
+  category: ScheduleCategory;
+  room_id: string;
+  institute_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  expected_audience: number;
+  recurrence: ScheduleRecurrence;
+  recurrence_end_date?: string;
+  equipment_requested?: string[];
+  notes?: string;
+}
+
+export interface UpdateSchedulePayload {
+  title?: string;
+  category?: ScheduleCategory;
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  expected_audience?: number;
+  equipment_requested?: string[];
+  notes?: string;
+  status?: ScheduleStatus;
 }
 
 export class ApiError extends Error {
@@ -100,12 +228,15 @@ export async function getInstitutes(): Promise<Institute[]> {
   return handleResponse<Institute[]>(response);
 }
 
-export async function createInstitute(name: string): Promise<Institute> {
+export async function createInstitute(
+  name: string,
+  floors: number
+): Promise<Institute> {
   const response = await fetch("/api/institutes", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, floors }),
   });
   return handleResponse<Institute>(response);
 }
@@ -152,6 +283,125 @@ export async function updateUser(
 
 export async function deleteUser(id: string): Promise<void> {
   const response = await fetch(`/api/users/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return handleResponse<void>(response);
+}
+
+function buildQueryString(params?: Record<string, string | undefined>): string {
+  if (!params) return "";
+  const filtered = Object.entries(params).filter(
+    (entry): entry is [string, string] => entry[1] !== undefined && entry[1] !== ""
+  );
+  if (filtered.length === 0) return "";
+  return `?${new URLSearchParams(filtered).toString()}`;
+}
+
+export async function getRooms(params?: {
+  institute_id?: string;
+  status?: string;
+  floor?: string;
+}): Promise<Room[]> {
+  const response = await fetch(`/api/rooms${buildQueryString(params)}`, {
+    credentials: "include",
+  });
+  return handleResponse<Room[]>(response);
+}
+
+export async function getRoom(id: string): Promise<Room> {
+  const response = await fetch(`/api/rooms/${id}`, {
+    credentials: "include",
+  });
+  return handleResponse<Room>(response);
+}
+
+export async function createRoom(data: CreateRoomPayload): Promise<Room> {
+  const response = await fetch("/api/rooms", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Room>(response);
+}
+
+export async function updateRoom(
+  id: string,
+  data: UpdateRoomPayload
+): Promise<Room> {
+  const response = await fetch(`/api/rooms/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Room>(response);
+}
+
+export async function deleteRoom(id: string): Promise<void> {
+  const response = await fetch(`/api/rooms/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return handleResponse<void>(response);
+}
+
+export async function getSchedules(params?: {
+  room_id?: string;
+  institute_id?: string;
+  date?: string;
+  professor_id?: string;
+  status?: string;
+}): Promise<Schedule[]> {
+  const response = await fetch(`/api/schedules${buildQueryString(params)}`, {
+    credentials: "include",
+  });
+  return handleResponse<Schedule[]>(response);
+}
+
+export async function getSchedulesToday(institute_id?: string): Promise<Schedule[]> {
+  const response = await fetch(
+    `/api/schedules/today${buildQueryString({ institute_id })}`,
+    { credentials: "include" }
+  );
+  return handleResponse<Schedule[]>(response);
+}
+
+export async function getSchedule(id: string): Promise<Schedule> {
+  const response = await fetch(`/api/schedules/${id}`, {
+    credentials: "include",
+  });
+  return handleResponse<Schedule>(response);
+}
+
+export async function createSchedule(
+  data: CreateSchedulePayload
+): Promise<Schedule[]> {
+  const response = await fetch("/api/schedules", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Schedule[]>(response);
+}
+
+export async function updateSchedule(
+  id: string,
+  data: UpdateSchedulePayload
+): Promise<Schedule> {
+  const response = await fetch(`/api/schedules/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<Schedule>(response);
+}
+
+export async function deleteSchedule(id: string): Promise<void> {
+  const response = await fetch(`/api/schedules/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
