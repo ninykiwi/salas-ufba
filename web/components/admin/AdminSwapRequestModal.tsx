@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, ArrowLeftRight, UserCheck, Calendar, ShieldAlert } from "lucide-react";
+import { X, ArrowLeftRight, UserCheck, Calendar, ShieldAlert, ChevronDown } from "lucide-react";
+
+const weekdayOptions = [
+  { value: "2", label: "Segunda-feira" },
+  { value: "3", label: "Terça-feira" },
+  { value: "4", label: "Quarta-feira" },
+  { value: "5", label: "Quinta-feira" },
+  { value: "6", label: "Sexta-feira" },
+];
 
 interface SwapRequestModalProps {
   isOpen: boolean;
@@ -27,12 +35,20 @@ export default function SwapRequestModal({
   // Estado para o tipo de proposta (caso seja "Outro Docente")
   const [proposalType, setProposalType] = useState<ProposalType>("PONTUAL");
 
+  // Estado do dropdown de dia fixo semanal
+  const [weekday, setWeekday] = useState(weekdayOptions[0].value);
+  const [weekdayOpen, setWeekdayOpen] = useState(false);
+  const weekdayRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
+      }
+      if (weekdayRef.current && !weekdayRef.current.contains(e.target as Node)) {
+        setWeekdayOpen(false);
       }
     };
 
@@ -186,13 +202,29 @@ export default function SwapRequestModal({
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Dia Fixo Semanal</label>
-                    <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:border-[#000666] focus:outline-none">
-                      <option value="2">Segunda-feira</option>
-                      <option value="3">Terça-feira</option>
-                      <option value="4">Quarta-feira</option>
-                      <option value="5">Quinta-feira</option>
-                      <option value="6">Sexta-feira</option>
-                    </select>
+                    <div className="relative" ref={weekdayRef}>
+                      <button
+                        type="button"
+                        onClick={() => setWeekdayOpen((v) => !v)}
+                        className="flex items-center justify-between gap-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white hover:bg-gray-50 focus:border-[#000666] focus:outline-none transition-colors"
+                      >
+                        {weekdayOptions.find((o) => o.value === weekday)?.label}
+                        <ChevronDown size={14} className="text-gray-400" />
+                      </button>
+                      {weekdayOpen && (
+                        <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                          {weekdayOptions.map((o) => (
+                            <li
+                              key={o.value}
+                              onClick={() => { setWeekday(o.value); setWeekdayOpen(false); }}
+                              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                            >
+                              {o.label}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Horário Semanal</label>

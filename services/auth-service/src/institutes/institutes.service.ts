@@ -23,7 +23,7 @@ export class InstitutesService {
       .replace(/-+$/, '');
   }
 
-  async create(data: { name: string }): Promise<Institute> {
+  async create(data: { name: string; floors: number }): Promise<Institute> {
     const slug = this.slugify(data.name);
 
     // Check if name or slug already exists
@@ -43,6 +43,7 @@ export class InstitutesService {
       data: {
         name: data.name,
         slug,
+        floors: data.floors,
       },
     });
   }

@@ -31,8 +31,9 @@ export default function AdminSidebar({ activeHref = "/" }: AdminSidebarProps) {
       // ADMIN
       navItems.push(
         { label: "Visão Geral", href: "/admin", icon: <LayoutGrid size={18} /> },
-        { label: "Relatórios", href: "/admin/relatorios", icon: <ClipboardClock size={18} /> },
-        { label: "Solicitações", href: "/admin/solicitacoes", icon: <ChartColumn  size={18} /> },
+        { label: "Salas", href: "/admin/salas", icon: <Building size={18} /> },
+        { label: "Relatórios", href: "/admin/relatorios", icon: <ChartColumn size={18} /> },
+        { label: "Solicitações", href: "/admin/solicitacoes", icon: <ClipboardClock  size={18} /> },
         { label: "Mapear Salas", href: "/admin/cadastrar-mapa", icon: <Map size={18} /> },
       );
     }

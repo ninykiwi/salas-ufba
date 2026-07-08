@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:3002")
+ROOMS_SERVICE_URL = os.getenv("ROOMS_SERVICE_URL", "http://localhost:3003")
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 if not JWT_SECRET:

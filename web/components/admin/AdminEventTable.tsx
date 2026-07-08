@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Pencil, Trash2, ChevronDown } from "lucide-react";
 
 export interface Evento {
   id: number;
@@ -23,12 +23,36 @@ interface AdminEventTableProps {
   rooms: RoomOption[];
 }
 
+const predioOptions = [
+  { value: "Todos", label: "Filtrar por Prédio" },
+  { value: "Instituto de Computação", label: "Instituto de Computação" },
+  { value: "Faculdade de Direito", label: "Faculdade de Direito" },
+];
+
 export default function AdminEventTable({ eventos, rooms }: AdminEventTableProps) {
   const [tipoFiltro, setTipoFiltro] = useState("Todos");
   const [salaFiltro, setSalaFiltro] = useState("Todas");
   const [predioFiltro, setPredioFiltro] = useState("Todos");
 
-  const eventosFiltrados = eventos.filter((e) => 
+  const [predioOpen, setPredioOpen] = useState(false);
+  const [salaOpen, setSalaOpen] = useState(false);
+  const predioRef = useRef<HTMLDivElement>(null);
+  const salaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (predioRef.current && !predioRef.current.contains(e.target as Node)) {
+        setPredioOpen(false);
+      }
+      if (salaRef.current && !salaRef.current.contains(e.target as Node)) {
+        setSalaOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const eventosFiltrados = eventos.filter((e) =>
     (tipoFiltro === "Todos" || e.tipo === tipoFiltro) &&
     (salaFiltro === "Todas" || e.sala === salaFiltro) &&
     (predioFiltro === "Todos" || e.predio === predioFiltro)
@@ -58,28 +82,65 @@ export default function AdminEventTable({ eventos, rooms }: AdminEventTableProps
 
         {/* Filtros de Localização */}
         <div className="flex items-center gap-3">
-          <select
-            className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#000666]"
-            onChange={(e) => setPredioFiltro(e.target.value)}
-            value={predioFiltro}
-          >
-            <option value="Todos">Filtrar por Prédio</option>
-            <option value="Instituto de Computação">Instituto de Computação</option>
-            <option value="Faculdade de Direito">Faculdade de Direito</option>
-          </select>
+          <div className="relative" ref={predioRef}>
+            <button
+              type="button"
+              onClick={() => setPredioOpen((v) => !v)}
+              className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#000666] transition-colors"
+            >
+              {predioOptions.find((o) => o.value === predioFiltro)?.label}
+              <ChevronDown size={14} className="text-gray-400" />
+            </button>
+            {predioOpen && (
+              <ul className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                {predioOptions.map((o) => (
+                  <li
+                    key={o.value}
+                    onClick={() => { setPredioFiltro(o.value); setPredioOpen(false); }}
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
+                      predioFiltro === o.value ? "text-[#000666] font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    {o.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
-          <select
-            className="bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#000666]"
-            onChange={(e) => setSalaFiltro(e.target.value)}
-            value={salaFiltro}
-          >
-            <option value="Todas">Filtrar por Sala</option>
-            {rooms.map((r) => (
-              <option key={r.id} value={r.name}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={salaRef}>
+            <button
+              type="button"
+              onClick={() => setSalaOpen((v) => !v)}
+              className="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#000666] transition-colors"
+            >
+              {salaFiltro === "Todas" ? "Filtrar por Sala" : salaFiltro}
+              <ChevronDown size={14} className="text-gray-400" />
+            </button>
+            {salaOpen && (
+              <ul className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-56 overflow-y-auto">
+                <li
+                  onClick={() => { setSalaFiltro("Todas"); setSalaOpen(false); }}
+                  className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
+                    salaFiltro === "Todas" ? "text-[#000666] font-semibold" : "text-gray-700"
+                  }`}
+                >
+                  Filtrar por Sala
+                </li>
+                {rooms.map((r) => (
+                  <li
+                    key={r.id}
+                    onClick={() => { setSalaFiltro(r.name); setSalaOpen(false); }}
+                    className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${
+                      salaFiltro === r.name ? "text-[#000666] font-semibold" : "text-gray-700"
+                    }`}
+                  >
+                    {r.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 

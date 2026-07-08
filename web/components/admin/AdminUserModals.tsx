@@ -40,6 +40,8 @@ export default function AdminUserModals({
   const [selectedInstituteId, setSelectedInstituteId] = useState<string | null>(null);
   const [instituteOpen, setInstituteOpen] = useState(false);
   const instituteRef = useRef<HTMLDivElement>(null);
+  const [roleOpen, setRoleOpen] = useState(false);
+  const roleRef = useRef<HTMLDivElement>(null);
 
   // Controle de Submissão e Erros
   const [error, setError] = useState("");
@@ -74,6 +76,9 @@ export default function AdminUserModals({
     const handleClickOutside = (e: MouseEvent) => {
       if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) {
         setInstituteOpen(false);
+      }
+      if (roleRef.current && !roleRef.current.contains(e.target as Node)) {
+        setRoleOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -198,7 +203,7 @@ export default function AdminUserModals({
             onSubmit={handleSave}
             className="bg-white rounded-xl p-6 w-full max-w-xl shadow-xl max-h-[90vh] overflow-y-auto border border-gray-100"
           >
-            <h3 className="text-lg font-bold text-[#000666] mb-5 border-b pb-2">
+            <h3 className="text-lg font-bold text-[#000666] mb-5 border-b pb-2 border-b-gray-200">
               Editar Perfil do Usuário
             </h3>
 
@@ -294,14 +299,32 @@ export default function AdminUserModals({
                   Permissão de Acesso
                 </label>
                 {currentUserRole === "SUPERADMIN" ? (
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as Role)}
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm bg-white focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none"
-                  >
-                    <option value="PROFESSOR">Professor</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
+                  <div className="relative" ref={roleRef}>
+                    <button
+                      type="button"
+                      onClick={() => setRoleOpen((v) => !v)}
+                      className="flex items-center justify-between gap-2 w-full border border-gray-300 rounded-md p-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors bg-white"
+                    >
+                      {role === "ADMIN" ? "Administrador" : "Professor"}
+                      <ChevronDown size={14} className="text-gray-400" />
+                    </button>
+                    {roleOpen && (
+                      <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                        <li
+                          onClick={() => { setRole("PROFESSOR"); setRoleOpen(false); }}
+                          className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                        >
+                          Professor
+                        </li>
+                        <li
+                          onClick={() => { setRole("ADMIN"); setRoleOpen(false); }}
+                          className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                        >
+                          Administrador
+                        </li>
+                      </ul>
+                    )}
+                  </div>
                 ) : (
                   <div className="w-full bg-gray-50 border border-gray-200 text-gray-600 rounded-md p-2 text-sm font-semibold select-none">
                     {role === "ADMIN" ? "Administrador" : "Professor"}
@@ -355,7 +378,7 @@ export default function AdminUserModals({
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end mt-6 border-t pt-4">
+            <div className="flex gap-3 justify-end mt-6 border-t pt-4 border-t-gray-200">
               <button
                 type="button"
                 onClick={onCloseEdit}

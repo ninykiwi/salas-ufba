@@ -1,49 +1,156 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { Info, CheckCircle } from "lucide-react";
+import { Info, CheckCircle, ChevronDown, AlertTriangle, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  getInstitutes,
+  createRoom,
+  ApiError,
+  Institute,
+  RoomType,
+  RoomStatus,
+  ROOM_TYPES,
+  ROOM_RESOURCES,
+} from "@/lib/api";
 
-const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
+interface FloorOption {
+  id: string;
+  name: string;
+}
 
-const mockInstitutes = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
-];
+function buildFloorOptions(floors: number): FloorOption[] {
+  const options: FloorOption[] = [{ id: "terreo", name: "Térreo" }];
+  for (let i = 1; i < floors; i++) {
+    options.push({ id: String(i), name: `${i}º Andar` });
+  }
+  return options;
+}
 
-// Novos mocks para os selects do formulário
-const mockBuildings = [
-  { id: 1, name: "Instituto de Computação" },
-  { id: 2, name: "Faculdade de Direito" },
-  { id: 3, name: "Instituto de Matemática e Estatística (IME)" },
-  { id: 4, name: "Escola Politécnica" },
-  { id: 5, name: "PAF I" },
-  { id: 6, name: "PAF II" },
-];
+export default function CadastrarSala() {
+  const router = useRouter();
+  const { user } = useAuth();
 
-const mockFloors = [
-  { id: "terreo", name: "Térreo" },
-  { id: "1", name: "1º Andar" },
-  { id: "2", name: "2º Andar" },
-  { id: "3", name: "3º Andar" },
-];
+  const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const [isLoadingInstitutes, setIsLoadingInstitutes] = useState(true);
 
-const mockRoomTypes = [
-  { id: "sala_aula", name: "Sala de Aula" },
-  { id: "laboratorio", name: "Laboratório" },
-  { id: "auditorio", name: "Auditório" },
-  { id: "sala_reuniao", name: "Sala de Reunião" },
-];
+  const [name, setName] = useState("");
+  const [selectedInstituteId, setSelectedInstituteId] = useState<string>("");
+  const [selectedFloor, setSelectedFloor] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<RoomType | "">("");
+  const [capacity, setCapacity] = useState("");
+  const [resources, setResources] = useState<string[]>([]);
+  const [status, setStatus] = useState<RoomStatus>("ativa");
 
-export default function Home() {
-  const [selectedCampus, setSelectedCampus] = useState<number | null>(1);
-  const [selectedInstitute, setSelectedInstitute] = useState<number | null>(1);
+  const [instituteOpen, setInstituteOpen] = useState(false);
+  const [floorOpen, setFloorOpen] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
+
+  const instituteRef = useRef<HTMLDivElement>(null);
+  const floorRef = useRef<HTMLDivElement>(null);
+  const typeRef = useRef<HTMLDivElement>(null);
+
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    getInstitutes()
+      .then(setInstitutes)
+      .catch(() => setError("Não foi possível carregar os institutos."))
+      .finally(() => setIsLoadingInstitutes(false));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const adminInstituteId = user.institutes?.[0]?.id;
+    if (adminInstituteId) setSelectedInstituteId(adminInstituteId);
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) {
+        setInstituteOpen(false);
+      }
+      if (floorRef.current && !floorRef.current.contains(e.target as Node)) {
+        setFloorOpen(false);
+      }
+      if (typeRef.current && !typeRef.current.contains(e.target as Node)) {
+        setTypeOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedInstitute = institutes.find((i) => i.id === selectedInstituteId);
+  const floorOptions = useMemo(
+    () => buildFloorOptions(selectedInstitute?.floors ?? 1),
+    [selectedInstitute]
+  );
+
+  const isDifferentInstitute =
+    !!user?.institutes?.[0]?.id &&
+    !!selectedInstituteId &&
+    selectedInstituteId !== user.institutes[0].id;
+
+  const handleInstituteChange = (id: string) => {
+    setSelectedInstituteId(id);
+    setSelectedFloor("");
+    setInstituteOpen(false);
+  };
+
+  const toggleResource = (resource: string) => {
+    setResources((prev) =>
+      prev.includes(resource) ? prev.filter((r) => r !== resource) : [...prev, resource]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    const capacityNumber = Number(capacity);
+    const errors: Record<string, boolean> = {
+      name: !name.trim(),
+      institute: !selectedInstituteId,
+      floor: !selectedFloor,
+      type: !selectedType,
+      capacity: !capacity || !Number.isInteger(capacityNumber) || capacityNumber < 1,
+    };
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
+
+    setIsSubmitting(true);
+    try {
+      await createRoom({
+        name: name.trim(),
+        institute_id: selectedInstituteId,
+        floor: selectedFloor,
+        type: selectedType as RoomType,
+        capacity: capacityNumber,
+        resources,
+        status,
+      });
+      router.push("/admin/salas");
+    } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        router.push("/login");
+        return;
+      }
+      setError(err.message || "Erro ao cadastrar a sala.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <AdminSidebar activeHref="/salas" />
+      <AdminSidebar activeHref="/admin/salas" />
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <AdminTopBar />
@@ -62,104 +169,201 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12">
-              
+
               {/* Main Form Card */}
               <div className="lg:col-span-2">
-                <form className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm space-y-6">
-                  
+                <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm space-y-6">
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs font-semibold flex items-start gap-2">
+                      <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="font-bold text-sm text-gray-700" htmlFor="room_name">Nome da Sala</label>
-                      <input className="w-full bg-white border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors" id="room_name" placeholder="Ex: Sala 101" type="text" />
+                      <input
+                        className={`w-full bg-white border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors ${
+                          fieldErrors.name ? "border-red-500" : "border-gray-300"
+                        }`}
+                        id="room_name"
+                        placeholder="Ex: Sala 101"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700" htmlFor="building">Prédio / Instituto</label>
-                      <select className="w-full bg-white border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors" id="building">
-                        <option value="">Selecione o Prédio</option>
-                        {mockBuildings.map((building) => (
-                          <option key={building.id} value={building.id}>
-                            {building.name}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="font-bold text-sm text-gray-700">Instituto</label>
+                      <div className="relative" ref={instituteRef}>
+                        <button
+                          type="button"
+                          onClick={() => setInstituteOpen((v) => !v)}
+                          disabled={isLoadingInstitutes}
+                          className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors disabled:opacity-50 ${
+                            isDifferentInstitute
+                              ? "border-yellow-400"
+                              : fieldErrors.institute
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {isLoadingInstitutes
+                            ? "Carregando..."
+                            : institutes.find((i) => i.id === selectedInstituteId)?.name ??
+                              "Selecione o Instituto"}
+                          <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {instituteOpen && (
+                          <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-56 overflow-y-auto">
+                            {institutes.map((institute) => (
+                              <li
+                                key={institute.id}
+                                onClick={() => handleInstituteChange(institute.id)}
+                                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                              >
+                                {institute.name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      {isDifferentInstitute && (
+                        <p className="text-xs text-yellow-600 font-semibold">
+                          Este instituto é diferente do seu instituto vinculado.
+                        </p>
+                      )}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700" htmlFor="floor">Andar</label>
-                      <select className="w-full bg-white border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors" id="floor">
-                        <option value="">Selecione o Andar</option>
-                        {mockFloors.map((floor) => (
-                          <option key={floor.id} value={floor.id}>
-                            {floor.name}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="font-bold text-sm text-gray-700">Andar</label>
+                      <div className="relative" ref={floorRef}>
+                        <button
+                          type="button"
+                          onClick={() => setFloorOpen((v) => !v)}
+                          className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors ${
+                            fieldErrors.floor ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          {floorOptions.find((f) => f.id === selectedFloor)?.name ?? "Selecione o Andar"}
+                          <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {floorOpen && (
+                          <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                            {floorOptions.map((floor) => (
+                              <li
+                                key={floor.id}
+                                onClick={() => { setSelectedFloor(floor.id); setFloorOpen(false); }}
+                                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                              >
+                                {floor.name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="font-bold text-sm text-gray-700" htmlFor="type">Tipo de Sala</label>
-                      <select className="w-full bg-white border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors" id="type">
-                        <option value="">Selecione o Tipo</option>
-                        {mockRoomTypes.map((type) => (
-                          <option key={type.id} value={type.id}>
-                            {type.name}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="font-bold text-sm text-gray-700">Tipo de Sala</label>
+                      <div className="relative" ref={typeRef}>
+                        <button
+                          type="button"
+                          onClick={() => setTypeOpen((v) => !v)}
+                          className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors ${
+                            fieldErrors.type ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          {ROOM_TYPES.find((t) => t.value === selectedType)?.label ?? "Selecione o Tipo"}
+                          <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {typeOpen && (
+                          <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                            {ROOM_TYPES.map((type) => (
+                              <li
+                                key={type.value}
+                                onClick={() => { setSelectedType(type.value); setTypeOpen(false); }}
+                                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                              >
+                                {type.label}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="font-bold text-sm text-gray-700" htmlFor="capacity">Capacidade (Pessoas)</label>
-                      <input className="w-full bg-white border border-gray-300 rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors" id="capacity" placeholder="40" type="number" />
+                      <input
+                        className={`w-full bg-white border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors ${
+                          fieldErrors.capacity ? "border-red-500" : "border-gray-300"
+                        }`}
+                        id="capacity"
+                        placeholder="Ex: 40"
+                        type="number"
+                        min={1}
+                        value={capacity}
+                        onChange={(e) => setCapacity(e.target.value)}
+                      />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <label className="font-bold text-sm text-gray-700">Recursos Disponíveis</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Ar Condicionado</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Projetor</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Quadro Branco</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Computadores</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Sistema de Áudio</span>
-                      </label>
-                      <label className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                        <input className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4" type="checkbox" />
-                        <span className="text-sm font-medium text-gray-700">Wi-Fi Dedicado</span>
-                      </label>
+                      {ROOM_RESOURCES.map((resource) => (
+                        <label
+                          key={resource}
+                          className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <input
+                            className="rounded text-[#000666] focus:ring-[#000666] h-4 w-4"
+                            type="checkbox"
+                            checked={resources.includes(resource)}
+                            onChange={() => toggleResource(resource)}
+                          />
+                          <span className="text-sm font-medium text-gray-700">{resource}</span>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-sm text-gray-700">Status da Sala</span>
                       <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" defaultChecked className="sr-only peer" />
+                        <input
+                          type="checkbox"
+                          checked={status === "ativa"}
+                          onChange={(e) => setStatus(e.target.checked ? "ativa" : "inativa")}
+                          className="sr-only peer"
+                        />
                         <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#000666]"></div>
-                        <span className="ms-3 text-sm font-medium text-gray-700">Ativa</span>
+                        <span className="ms-3 text-sm font-medium text-gray-700">
+                          {status === "ativa" ? "Ativa" : "Inativa"}
+                        </span>
                       </label>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-end gap-4 pt-4">
-                    <button className="px-6 py-2.5 border border-[#000666] text-[#000666] rounded font-bold text-sm hover:bg-gray-50 transition-colors" type="button">
+                    <button
+                      className="px-6 py-2.5 border border-[#000666] text-[#000666] rounded font-bold text-sm hover:bg-gray-50 transition-colors"
+                      type="button"
+                      onClick={() => router.push("/admin/salas")}
+                      disabled={isSubmitting}
+                    >
                       CANCELAR
                     </button>
-                    <button className="px-6 py-2.5 bg-[#000666] text-white rounded font-bold text-sm hover:bg-blue-900 transition-colors" type="submit">
+                    <button
+                      className="flex items-center gap-2 px-6 py-2.5 bg-[#000666] text-white rounded font-bold text-sm hover:bg-blue-900 transition-colors disabled:opacity-50"
+                      type="submit"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting && <Loader2 className="animate-spin" size={16} />}
                       CADASTRAR SALA
                     </button>
                   </div>
@@ -168,8 +372,8 @@ export default function Home() {
 
               {/* Sidebar Info/Tooltips */}
               <div className="space-y-6">
-                
-                <div className="bg-[#000666] text-white p-6 rounded-lg border-l-4 border-blue-400">
+
+                <div className="bg-[#000666] text-white p-6 rounded-lg">
                   <div className="flex items-center gap-2 mb-3">
                     <Info size={20} className="text-blue-300" />
                     <h3 className="font-bold text-base">Gestão de Recursos</h3>
@@ -178,7 +382,7 @@ export default function Home() {
                     Ao cadastrar uma sala com recursos específicos (ex: Ar Condicionado), o sistema automaticamente prioriza essas salas para turmas com necessidades especiais ou eventos oficiais do instituto.
                   </p>
                 </div>
-                
+
                 <div className="bg-[#f8f9fa] p-6 rounded-lg border border-gray-200">
                   <h3 className="font-bold text-base text-[#000666] mb-4">Dicas de Cadastro</h3>
                   <ul className="space-y-4">
