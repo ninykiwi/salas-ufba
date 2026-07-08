@@ -6,6 +6,7 @@ import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Building, Plus, Loader2, Landmark, CheckCircle, AlertTriangle } from "lucide-react";
+import { getInstitutes, createInstitute, ApiError } from "@/lib/api";
 
 interface Institute {
   id: string;
@@ -23,25 +24,15 @@ export default function GestaoInstitutos() {
   const [success, setSuccess] = useState("");
   const router = useRouter();
 
-  const fetchInstitutes = async (token: string) => {
+  const fetchInstitutes = async () => {
     try {
-      const response = await fetch("http://localhost:3001/institutes", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          router.push("/login");
-          return;
-        }
-        throw new Error("Erro ao carregar institutos");
-      }
-
-      const data = await response.json();
+      const data = await getInstitutes();
       setInstitutes(data);
     } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        router.push("/login");
+        return;
+      }
       setError("Não foi possível carregar os institutos.");
     } finally {
       setIsLoading(false);
@@ -64,7 +55,7 @@ export default function GestaoInstitutos() {
         router.push("/admin");
         return;
       }
-      fetchInstitutes(token);
+      fetchInstitutes();
     } catch (e) {
       router.push("/login");
     }
@@ -78,24 +69,8 @@ export default function GestaoInstitutos() {
     setError("");
     setSuccess("");
 
-    const token = localStorage.getItem("access_token");
-
     try {
-      const response = await fetch("http://localhost:3001/institutes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ name: newInstituteName.trim() }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Erro ao cadastrar instituto");
-      }
-
-      const newInst = await response.json();
+      const newInst = await createInstitute(newInstituteName.trim());
       setInstitutes((prev) => [...prev, newInst].sort((a, b) => a.name.localeCompare(b.name)));
       setNewInstituteName("");
       setSuccess("Instituto cadastrado com sucesso!");

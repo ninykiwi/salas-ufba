@@ -1,6 +1,5 @@
 import { LayoutGrid, CalendarDays, Map, Monitor } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 interface NavItem {
   label: string;
@@ -26,7 +25,7 @@ export default function Sidebar({ activeHref = "/" }: SidebarProps) {
 
       <div className="flex items-center gap-3 px-5 py-6">
 
-        <Image src="/ufba-logo.png" alt="UFBA" width={32} height={32} className="object-contain" />
+        <img src="/ufba-logo.png" alt="UFBA" width={32} height={32} className="object-contain" />
 
         <div>
           <p className="font-bold text-sm text-gray-900 leading-tight">Salas UFBA 2.0</p>

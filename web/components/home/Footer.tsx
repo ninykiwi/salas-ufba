@@ -1,11 +1,10 @@
 import { HelpCircle, Settings } from "lucide-react";
-import Image from "next/image";
 
 export default function Footer() {
   return (
     <footer className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
       <div className="flex items-center gap-3">
-      <Image src="/ufba-logo.png" alt="UFBA" width={28} height={28} className="object-contain" />
+      <img src="/ufba-logo.png" alt="UFBA" width={32} height={32} className="object-contain" />
 
         <div>
           <p className="text-xs font-bold text-gray-800">UFBA</p>

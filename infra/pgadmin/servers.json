@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Salas UFBA",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "salas_ufba_auth",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}

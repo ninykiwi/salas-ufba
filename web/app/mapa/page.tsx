@@ -212,7 +212,7 @@ export default function MapaPage() {
                       <>
                         <p className="text-sm font-bold text-indigo-900 leading-snug">{selectedEvent.title}</p>
                         <p className="text-xs text-gray-500">{selectedEvent.professor}</p>
-                        <p className="text-xs text-gray-500">{selectedEvent.startTime} — {selectedEvent.endTime}</p>
+                        <p className="text-xs text-gray-500">{selectedEvent.startTime} - {selectedEvent.endTime}</p>
                       </>
                     ) : (
                       <>
