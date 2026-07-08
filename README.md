@@ -68,7 +68,7 @@ Trabalho final da disciplina de sistemas web 2026.1 da universidade federal da b
 
 ## Primeiro Acesso
 
-O `auth-service` não tem mais seed automático de usuários. Para criar o primeiro usuário (SUPERADMIN) do zero, rode o script manual dentro do container ou localmente (com o Postgres acessível e o `.env` da raiz preenchido):
+Para criar o primeiro usuário (SUPERADMIN) do zero, rode o script manual dentro do container ou localmente (em ambos os casos com o docker buildado e em outro terminal):
 
 ```bash
 docker compose exec auth-service npx ts-node scripts/create-superadmin.ts --name "Admin" --email "admin@ufba.br" --password "Senha123!"
