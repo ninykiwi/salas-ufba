@@ -38,12 +38,12 @@ Trabalho final da disciplina de sistemas web 2026.1 da universidade federal da b
     Por exemplo: JWT_SECRET=qualquercoisa
     ```
 
-2. Suba todos os serviços com Docker Compose:
+3. Suba todos os serviços com Docker Compose:
    ```bash
    docker compose up --build
    ```
 
-3. Acesse a aplicação em [http://localhost:3000](http://localhost:3000)
+4. Acesse a aplicação em [http://localhost:3000](http://localhost:3000)
 
 `Ctrl+C` derruba os containers (ou rode `docker compose down` em outro terminal).
 
@@ -56,6 +56,15 @@ Trabalho final da disciplina de sistemas web 2026.1 da universidade federal da b
 | auth-service | 3002 |
 | bff (FastAPI) | 8000 |
 | postgres | 5432 |
+| pgAdmin | 5050 |
+
+## pgAdmin
+
+1. Acesse [http://localhost:5050](http://localhost:5050).
+2. Faça login com o e-mail e a senha definidos no .env: `admin@admin.com` e `admin`.
+3. Clique em ```servers```
+4. O servidor **Salas UFBA** já aparece na lista à esquerda, pré-configurado
+5. Ao tentar abrir, ele vai pedir a senha definida no .env: `postgres`
 
 ## Primeiro Acesso
 

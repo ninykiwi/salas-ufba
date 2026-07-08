@@ -75,6 +75,21 @@ services:
     networks:
       - salas_network
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: salas-ufba-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    volumes:
+      - ./infra/pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      - postgres
+    networks:
+      - salas_network
+
 networks:
   salas_network:
     driver: bridge
