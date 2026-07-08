@@ -2,7 +2,7 @@ import httpx
 from fastapi import APIRouter, Depends, Response, status
 
 from config import AUTH_SERVICE_URL
-from middleware.auth import get_current_user, oauth2_scheme
+from middleware.auth import get_current_user, get_token_from_cookie
 from models.auth import AuthenticatedUser
 from models.user import CreateUserRequest, UpdateUserRequest
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def list_users(
     response: Response,
     _: AuthenticatedUser = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token_from_cookie),
 ):
     async with httpx.AsyncClient() as client:
         upstream = await client.get(
@@ -29,7 +29,7 @@ async def create_user(
     body: CreateUserRequest,
     response: Response,
     _: AuthenticatedUser = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token_from_cookie),
 ):
     async with httpx.AsyncClient() as client:
         upstream = await client.post(
@@ -47,7 +47,7 @@ async def update_user(
     body: UpdateUserRequest,
     response: Response,
     _: AuthenticatedUser = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token_from_cookie),
 ):
     async with httpx.AsyncClient() as client:
         upstream = await client.patch(
@@ -63,7 +63,7 @@ async def update_user(
 async def delete_user(
     user_id: str,
     _: AuthenticatedUser = Depends(get_current_user),
-    token: str = Depends(oauth2_scheme),
+    token: str = Depends(get_token_from_cookie),
 ):
     async with httpx.AsyncClient() as client:
         upstream = await client.delete(

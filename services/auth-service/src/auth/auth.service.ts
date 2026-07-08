@@ -24,6 +24,7 @@ export class AuthService {
     const payload = {
       email: user.email,
       sub: user.id,
+      name: user.name,
       role: user.role,
       institutes:
         user.institutes?.map((i) => ({

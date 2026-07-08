@@ -99,6 +99,9 @@ export class UsersService {
 
     if (requester.role === Role.SUPERADMIN) {
       users = await this.prisma.user.findMany({
+        where: {
+          role: { not: Role.SUPERADMIN },
+        },
         include: { institutes: true },
         orderBy: { name: 'asc' },
       });
