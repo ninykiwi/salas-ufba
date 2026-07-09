@@ -64,10 +64,13 @@ export class AuthController {
     }
 
     // 3. SUPERADMIN can register anyone
-    return this.authService.register({
-      ...body,
-      role: targetRole,
-    });
+    return this.authService.register(
+      {
+        ...body,
+        role: targetRole,
+      },
+      { id: requester.id, name: requester.name, role: requester.role },
+    );
   }
 
   @Post('login')

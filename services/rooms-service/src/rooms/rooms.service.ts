@@ -51,4 +51,8 @@ export class RoomsService {
     const room = await this.findOne(id);
     await room.deleteOne();
   }
+
+  async removeByInstitute(institute_id: string): Promise<void> {
+    await this.roomModel.deleteMany({ institute_id }).exec();
+  }
 }

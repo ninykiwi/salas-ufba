@@ -3,12 +3,14 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Role } from '@prisma/client';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private auditService: AuditService,
   ) {}
 
   async validateUser(identifier: string, pass: string): Promise<any> {
@@ -33,6 +35,16 @@ export class AuthService {
           slug: i.slug,
         })) || [],
     };
+
+    await this.auditService.log({
+      admin_id: user.id,
+      admin_name: user.name,
+      admin_role: user.role,
+      action: 'LOGIN',
+      resource_type: 'sistema',
+      description: 'Login realizado',
+    });
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -46,14 +58,17 @@ export class AuthService {
     };
   }
 
-  async register(data: {
-    name: string;
-    email: string;
-    siape?: string;
-    password: string;
-    role: Role;
-    instituteIds?: string[];
-  }) {
-    return this.usersService.create(data);
+  async register(
+    data: {
+      name: string;
+      email: string;
+      siape?: string;
+      password: string;
+      role: Role;
+      instituteIds?: string[];
+    },
+    actor: { id: string; name: string; role: string },
+  ) {
+    return this.usersService.create(data, actor);
   }
 }

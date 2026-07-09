@@ -73,19 +73,26 @@ export default function EditScheduleModal({
     );
   };
 
+  const audienceNumber = Number(expectedAudience);
+  const audienceExceedsCapacity =
+    !!room && Number.isInteger(audienceNumber) && audienceNumber > room.capacity;
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!schedule) return;
     setError("");
 
-    const audienceNumber = Number(expectedAudience);
     const errors: Record<string, boolean> = {
       title: !title.trim(),
       category: !category,
       date: !date,
       startTime: !startTime,
       endTime: !endTime,
-      expectedAudience: !expectedAudience || !Number.isInteger(audienceNumber) || audienceNumber < 1,
+      expectedAudience:
+        !expectedAudience ||
+        !Number.isInteger(audienceNumber) ||
+        audienceNumber < 1 ||
+        audienceExceedsCapacity,
     };
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
@@ -208,9 +215,14 @@ export default function EditScheduleModal({
               value={expectedAudience}
               onChange={(e) => setExpectedAudience(e.target.value)}
               className={`w-full border rounded-md p-2 text-sm focus:ring-1 focus:ring-[#000666] focus:border-[#000666] focus:outline-none ${
-                fieldErrors.expectedAudience ? "border-red-500" : "border-gray-300"
+                fieldErrors.expectedAudience || audienceExceedsCapacity ? "border-red-500" : "border-gray-300"
               }`}
             />
+            {audienceExceedsCapacity && room && (
+              <p className="text-xs text-red-600 font-semibold mt-1">
+                O público estimado não pode ultrapassar a capacidade máxima da sala ({room.capacity} pessoas)
+              </p>
+            )}
           </div>
 
           <div>

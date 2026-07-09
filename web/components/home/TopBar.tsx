@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapPin, Building2, ChevronDown, Info, Bell } from "lucide-react";
+import { MapPin, Building2, ChevronDown, Info } from "lucide-react";
+import NotificationsBell from "@/components/NotificationsBell";
 
 interface TopBarProps {
   campuses: { id: number; name: string }[];
@@ -124,9 +125,7 @@ export default function TopBar({
                     <p className="text-xs text-gray-700 mt-0.5">{dateLabel}</p>
                 </div>
 
-                {/*<button className="text-gray-400 hover:text-[#000666] transition-colors">
-                    <Bell size={20} />
-                </button>*/}
+                <NotificationsBell />
 
                 {/* MODIFICAÇÃO AQUI: Adicionado a classe 'group' e o elemento do modalzinho */}
                 <div className="relative group flex items-center justify-center">

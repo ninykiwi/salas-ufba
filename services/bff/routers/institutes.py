@@ -1,5 +1,5 @@
 import httpx
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response
 
 from config import AUTH_SERVICE_URL
 from middleware.auth import get_current_user, get_token_from_cookie
@@ -37,6 +37,7 @@ async def create_institute(
 @router.delete("/{institute_id}")
 async def delete_institute(
     institute_id: str,
+    response: Response,
     _: AuthenticatedUser = Depends(get_current_user),
     token: str = Depends(get_token_from_cookie),
 ):
@@ -45,10 +46,5 @@ async def delete_institute(
             f"{AUTH_SERVICE_URL}/institutes/{institute_id}",
             headers={"Authorization": f"Bearer {token}"},
         )
-    if upstream.status_code == status.HTTP_204_NO_CONTENT:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    return Response(
-        content=upstream.content,
-        status_code=upstream.status_code,
-        media_type="application/json",
-    )
+    response.status_code = upstream.status_code
+    return upstream.json()

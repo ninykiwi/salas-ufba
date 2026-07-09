@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/home/Sidebar";
 import TopBar from "@/components/home/TopBar";
 import Footer from "@/components/home/Footer";
 import { ChevronLeft, ChevronRight, Filter, Clock, X } from "lucide-react";
+import {
+  getInstitutes,
+  getRooms,
+  getSchedules,
+  Institute,
+  Room,
+  Schedule,
+  ScheduleCategory,
+} from "@/lib/api";
 
 // --- Interfaces e Mocks ---
 interface Event {
-  id: string | number;
+  id: string;
   title: string;
   description?: string;
   date: string;
@@ -18,10 +27,6 @@ interface Event {
 }
 
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
-const mockInstitutes = [
-  { id: "1", name: "Instituto de Computação" },
-  { id: "2", name: "Faculdade de Direito" },
-];
 
 const COLOR_MAP = {
   blue: "bg-blue-50 border-blue-500 text-blue-700",
@@ -29,26 +34,87 @@ const COLOR_MAP = {
   green: "bg-green-50 border-green-500 text-green-700",
 };
 
+const CATEGORY_COLOR_SCHEME: Record<ScheduleCategory, Event["colorScheme"]> = {
+  aula_regular: "blue",
+  defesa: "red",
+  palestra: "green",
+  reuniao: "red",
+  minicurso: "green",
+};
+
 const DIAS_DA_SEMANA = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
 export default function Home() {
   const [selectedCampus, setSelectedCampus] = useState<number | null>(1);
-  const [selectedInstitute, setSelectedInstitute] = useState<string | null>("1");
+
+  const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const [selectedInstitute, setSelectedInstitute] = useState<string | null>(null);
+
+  useEffect(() => {
+    getInstitutes()
+      .then((data) => {
+        setInstitutes(data);
+        if (data.length > 0) {
+          setSelectedInstitute(data[0].id);
+        } else {
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        setInstitutes([]);
+        setIsLoading(false);
+      });
+  }, []);
+
   const [showFilters, setShowFilters] = useState(false);
   const [startDateInput, setStartDateInput] = useState("");
   const [baseDate, setBaseDate] = useState(() => new Date());
 
-  const [events] = useState<Event[]>([
-    { id: 1, title: "Cálculo Diferencial I", description: "Sala 102 • Prof. Silva", date: "2026-10-21", start: "08:00", end: "10:00", colorScheme: "blue" },
-    { id: 2, title: "Reunião Colegiado", date: "2026-10-24", start: "08:30", end: "09:30", colorScheme: "red" },
-    { id: 3, title: "Sistemas Distribuídos", description: "Laboratório 3", date: "2026-10-22", start: "14:15", end: "16:00", colorScheme: "green" },
-  ]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!selectedInstitute) return;
+
+    setIsLoading(true);
+    Promise.all([
+      getSchedules({ institute_id: selectedInstitute }),
+      getRooms({ institute_id: selectedInstitute }),
+    ])
+      .then(([schedulesData, roomsData]) => {
+        setSchedules(schedulesData);
+        setRooms(roomsData);
+      })
+      .finally(() => setIsLoading(false));
+  }, [selectedInstitute]);
+
+  const roomNameById = useMemo(
+    () => new Map(rooms.map((room) => [room._id, room.name])),
+    [rooms]
+  );
+
+  const events: Event[] = useMemo(
+    () =>
+      schedules.map((schedule) => ({
+        id: schedule._id,
+        title: schedule.title,
+        description: `${
+          roomNameById.get(schedule.room_id) ?? "Sala removida"
+        } • ${schedule.professor_name}`,
+        date: schedule.date,
+        start: schedule.start_time,
+        end: schedule.end_time,
+        colorScheme: CATEGORY_COLOR_SCHEME[schedule.category],
+      })),
+    [schedules, roomNameById]
+  );
 
   // Geração dos dias da semana (Imutável e seguro)
   const weekDays = useMemo(() => {
     const startOfWeek = new Date(baseDate);
     startOfWeek.setDate(baseDate.getDate() - baseDate.getDay());
-    
+
     return Array.from({ length: 7 }, (_, i) => {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
@@ -85,7 +151,7 @@ export default function Home() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar
             campuses={mockCampuses} selectedCampus={selectedCampus} onCampusChange={setSelectedCampus}
-            institutes={mockInstitutes} selectedInstitute={selectedInstitute} onInstituteChange={setSelectedInstitute}
+            institutes={institutes} selectedInstitute={selectedInstitute} onInstituteChange={setSelectedInstitute}
           />
 
           <main className="flex-1 overflow-y-auto px-8 py-6">
@@ -95,7 +161,7 @@ export default function Home() {
                 <h1 className="text-2xl font-bold text-gray-900">Agenda Completa</h1>
                 <p className="text-sm text-gray-500 mt-1">Acompanhe a disponibilidade das salas do instituto.</p>
               </div>
-              
+
               <div className="relative flex items-center gap-3">
                 <div className="flex items-center bg-gray-100 border border-gray-200 rounded-md p-1">
                   <button onClick={() => handleNavigateWeek(-7)} className="p-2 hover:bg-gray-200 rounded-md text-[#0a1e4a]">
@@ -109,7 +175,7 @@ export default function Home() {
                   </button>
                 </div>
 
-                <button 
+                <button
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex items-center gap-2 px-4 py-2 bg-white border rounded-md text-[#0a1e4a] text-sm font-medium transition-colors ${showFilters ? "border-[#0a1e4a] shadow-sm" : "border-gray-300 hover:bg-gray-50"}`}
                 >
@@ -134,10 +200,17 @@ export default function Home() {
             </div>
 
             {/* --- CONTAINER DO CALENDÁRIO --- */}
-            <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-[600px]">
+            {isLoading ? (
+              <p className="text-sm text-gray-400">Carregando agenda...</p>
+            ) : rooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-150 text-gray-400 gap-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+                <p className="text-sm">Nenhuma sala cadastrada neste instituto.</p>
+              </div>
+            ) : (
+            <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-150">
               <div className="flex-1 overflow-auto custom-scrollbar">
                 <div className="min-w-[1000px] h-full flex flex-col">
-                  
+
                   {/* Linha superior: Cabeçalho dos Dias */}
                   <div className="grid grid-cols-[80px_repeat(7,1fr)] bg-gray-50 sticky top-0 z-30 border-b border-gray-200 shadow-sm">
                     <div className="p-4 flex items-center justify-center text-gray-400 border-r border-gray-200 bg-white">
@@ -166,12 +239,12 @@ export default function Home() {
                             <div className="p-2 text-right pr-4 text-sm text-gray-400 font-medium border-b border-r border-gray-100 bg-white sticky left-0 z-20">
                               {hour.toString().padStart(2, '0')}:00
                             </div>
-                        
+
                             {/* Células de agendamento por dia */}
                             {weekDays.map((day, dayIndex) => {
                               const dateStr = day.toISOString().split("T")[0];
                               const cellEvents = events.filter(e => e.date === dateStr && parseInt(e.start.split(":")[0]) === hour);
-                            
+
                               return (
                                 <div key={dayIndex} className="border-b border-r border-gray-100 relative group cursor-pointer hover:bg-blue-50/30 transition-colors" onClick={() => alert(`Novo evento: ${day.toLocaleDateString()} às ${hour}:00`)}>
                                   {cellEvents.map((event) => {
@@ -201,6 +274,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
+            )}
           </main>
 
           <Footer />

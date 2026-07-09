@@ -93,6 +93,9 @@ export default function CadastrarEventoProfessor() {
   }, []);
 
   const selectedRoom = rooms.find((r) => r._id === selectedRoomId);
+  const audienceNumber = Number(expectedAudience);
+  const audienceExceedsCapacity =
+    !!selectedRoom && Number.isInteger(audienceNumber) && audienceNumber > selectedRoom.capacity;
 
   const handleInstituteChange = (id: string) => {
     setSelectedInstituteId(id);
@@ -117,7 +120,6 @@ export default function CadastrarEventoProfessor() {
     e.preventDefault();
     setError("");
 
-    const audienceNumber = Number(expectedAudience);
     const errors: Record<string, boolean> = {
       title: !title.trim(),
       category: !selectedCategory,
@@ -126,7 +128,11 @@ export default function CadastrarEventoProfessor() {
       date: !date,
       startTime: !startTime,
       endTime: !endTime,
-      expectedAudience: !expectedAudience || !Number.isInteger(audienceNumber) || audienceNumber < 1,
+      expectedAudience:
+        !expectedAudience ||
+        !Number.isInteger(audienceNumber) ||
+        audienceNumber < 1 ||
+        audienceExceedsCapacity,
       recurrenceEndDate: recurrence !== "unico" && !recurrenceEndDate,
     };
     setFieldErrors(errors);
@@ -360,7 +366,7 @@ export default function CadastrarEventoProfessor() {
                       </label>
                       <input
                         className={`w-full bg-white border rounded p-3 text-sm focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors ${
-                          fieldErrors.expectedAudience ? "border-red-500" : "border-gray-300"
+                          fieldErrors.expectedAudience || audienceExceedsCapacity ? "border-red-500" : "border-gray-300"
                         }`}
                         id="expected_audience"
                         placeholder="Ex: 35"
@@ -369,6 +375,11 @@ export default function CadastrarEventoProfessor() {
                         value={expectedAudience}
                         onChange={(e) => setExpectedAudience(e.target.value)}
                       />
+                      {audienceExceedsCapacity && selectedRoom && (
+                        <p className="text-xs text-red-600 font-semibold">
+                          O público estimado não pode ultrapassar a capacidade máxima da sala ({selectedRoom.capacity} pessoas)
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <label className="font-bold text-sm text-gray-700">Tipo de Agendamento</label>

@@ -1,3 +1,5 @@
+import { MapShape } from "@/types/map";
+
 export type Role = "SUPERADMIN" | "ADMIN" | "PROFESSOR";
 
 export interface InstituteRef {
@@ -241,12 +243,21 @@ export async function createInstitute(
   return handleResponse<Institute>(response);
 }
 
-export async function deleteInstitute(id: string): Promise<void> {
+export interface DeleteInstituteResponse {
+  hasLinkedUsers: boolean;
+  hasLinkedRooms: boolean;
+  linkedUsersCount: number;
+  linkedRoomsCount: number;
+}
+
+export async function deleteInstitute(
+  id: string
+): Promise<DeleteInstituteResponse> {
   const response = await fetch(`/api/institutes/${id}`, {
     method: "DELETE",
     credentials: "include",
   });
-  return handleResponse<void>(response);
+  return handleResponse<DeleteInstituteResponse>(response);
 }
 
 export async function getUsers(): Promise<ApiUser[]> {
@@ -406,4 +417,107 @@ export async function deleteSchedule(id: string): Promise<void> {
     credentials: "include",
   });
   return handleResponse<void>(response);
+}
+
+export type NotificationType =
+  | "nova_solicitacao"
+  | "solicitacao_aprovada"
+  | "solicitacao_recusada";
+
+export interface AppNotification {
+  _id: string;
+  user_id: string;
+  institute_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  schedule_id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getNotifications(): Promise<AppNotification[]> {
+  const response = await fetch("/api/notifications", {
+    credentials: "include",
+  });
+  return handleResponse<AppNotification[]>(response);
+}
+
+export async function markNotificationRead(
+  id: string
+): Promise<AppNotification> {
+  const response = await fetch(`/api/notifications/${id}/read`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return handleResponse<AppNotification>(response);
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const response = await fetch("/api/notifications", {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return handleResponse<void>(response);
+}
+
+export interface AuditLog {
+  id: string;
+  admin_id: string;
+  admin_name: string;
+  admin_role: string;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  description: string;
+  created_at: string;
+}
+
+export async function getLogs(params?: {
+  admin_id?: string;
+  resource_type?: string;
+}): Promise<AuditLog[]> {
+  const response = await fetch(`/api/logs${buildQueryString(params)}`, {
+    credentials: "include",
+  });
+  return handleResponse<AuditLog[]>(response);
+}
+
+export interface ApiMap {
+  _id: string;
+  institute_id: string;
+  institute_name: string;
+  floor: number;
+  shapes: MapShape[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveMapPayload {
+  institute_id: string;
+  institute_name: string;
+  floor: number;
+  shapes: MapShape[];
+}
+
+export async function getMap(
+  institute_id: string,
+  floor: number
+): Promise<ApiMap> {
+  const response = await fetch(
+    `/api/maps${buildQueryString({ institute_id, floor: String(floor) })}`,
+    { credentials: "include" }
+  );
+  return handleResponse<ApiMap>(response);
+}
+
+export async function saveMap(data: SaveMapPayload): Promise<ApiMap> {
+  const response = await fetch("/api/maps", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<ApiMap>(response);
 }

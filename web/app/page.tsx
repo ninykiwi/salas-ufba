@@ -1,76 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Sidebar from "@/components/home/Sidebar";
 import TopBar from "@/components/home/TopBar";
 import Footer from "@/components/home/Footer";
 import RoomCard from "@/components/home/RoomCard";
-import { getInstitutes, Institute } from "@/lib/api";
+import {
+  getInstitutes,
+  getRooms,
+  getSchedulesToday,
+  Institute,
+  Room,
+  Schedule,
+} from "@/lib/api";
+import { computeRoomOccupancy, RoomOccupancyStatus } from "@/lib/roomOccupancy";
 
 type StatusFilter = "TODAS" | "LIVRES" | "OCUPADAS";
-type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
 
-interface Room {
-  id: number;
-  name: string;
-  status: RoomStatus;
-  currentEvent?: { title: string; startTime: string; endTime: string };
-  nextEvent?: { title: string; time: string };
-  capacity: number;
-  freeUntil?: string;
-}
-
-const rooms: Room[] = [
-  {
-    id: 1,
-    name: "SmartClass II",
-    status: "OCUPADA",
-    currentEvent: { title: "Aula: Grafos", startTime: "07:55", endTime: "09:35" },
-    nextEvent: { title: "Reunião Geral IC", time: "10:00" },
-    capacity: 40,
-  },
-  {
-    id: 2,
-    name: "Laboratório 1",
-    status: "LIVRE",
-    nextEvent: { title: "Aula: Lab 1 (Redes)", time: "11:35" },
-    capacity: 30,
-  },
-  {
-    id: 3,
-    name: "Sala 101",
-    status: "OCUPADA",
-    currentEvent: { title: "Aula: EDA 1", startTime: "08:50", endTime: "10:40" },
-    nextEvent: { title: "Cálculo A", time: "13:00" },
-    capacity: 60,
-  },
-  {
-    id: 4,
-    name: "Sala de Reuniões",
-    status: "EM_REUNIAO",
-    currentEvent: { title: "Planejamento 2026", startTime: "09:00", endTime: "11:00" },
-    nextEvent: { title: "Reunião Formas", time: "14:50" },
-    capacity: 12,
-  },
-  {
-    id: 5,
-    name: "Auditório",
-    status: "LIVRE",
-    nextEvent: { title: "Colação de Grau", time: "18:30" },
-    capacity: 120,
-    freeUntil: "18:30",
-  },
-  {
-    id: 6,
-    name: "Sala 102",
-    status: "OCUPADA",
-    currentEvent: { title: "Aula: POO", startTime: "07:55", endTime: "09:35" },
-    nextEvent: { title: "Eletromag", time: "09:45" },
-    capacity: 45,
-  },
-];
-
-const filterMap: Record<StatusFilter, RoomStatus[]> = {
+const filterMap: Record<StatusFilter, RoomOccupancyStatus[]> = {
   TODAS: ["OCUPADA", "LIVRE", "EM_REUNIAO"],
   LIVRES: ["LIVRE"],
   OCUPADAS: ["OCUPADA", "EM_REUNIAO"],
@@ -78,8 +25,9 @@ const filterMap: Record<StatusFilter, RoomStatus[]> = {
 
 const mockCampuses = [{ id: 1, name: "Campus Ondina" }];
 
-export default function Home() {
+const REFRESH_INTERVAL_MS = 60_000;
 
+export default function Home() {
   const [selectedCampus, setSelectedCampus] = useState<number | null>(1);
 
   const [institutes, setInstitutes] = useState<Institute[]>([]);
@@ -89,16 +37,55 @@ export default function Home() {
     getInstitutes()
       .then((data) => {
         setInstitutes(data);
-        if (data.length > 0) setSelectedInstitute(data[0].id);
+        if (data.length > 0) {
+          setSelectedInstitute(data[0].id);
+        } else {
+          setIsLoading(false);
+        }
       })
-      .catch(() => setInstitutes([]));
+      .catch(() => {
+        setInstitutes([]);
+        setIsLoading(false);
+      });
   }, []);
 
   const [filter, setFilter] = useState<StatusFilter>("TODAS");
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [todaySchedules, setTodaySchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filtered = rooms.filter((r) => filterMap[filter].includes(r.status));
+  const loadOccupancy = useCallback(async (instituteId: string) => {
+    const [roomsData, schedulesData] = await Promise.all([
+      getRooms({ institute_id: instituteId, status: "ativa" }),
+      getSchedulesToday(instituteId),
+    ]);
+    setRooms(roomsData);
+    setTodaySchedules(schedulesData);
+  }, []);
 
-return (
+  useEffect(() => {
+    if (!selectedInstitute) return;
+
+    setIsLoading(true);
+    loadOccupancy(selectedInstitute).finally(() => setIsLoading(false));
+
+    const interval = setInterval(
+      () => loadOccupancy(selectedInstitute),
+      REFRESH_INTERVAL_MS
+    );
+    return () => clearInterval(interval);
+  }, [selectedInstitute, loadOccupancy]);
+
+  const roomsWithOccupancy = rooms.map((room) => ({
+    room,
+    occupancy: computeRoomOccupancy(room, todaySchedules),
+  }));
+
+  const filtered = roomsWithOccupancy.filter(({ occupancy }) =>
+    filterMap[filter].includes(occupancy.status)
+  );
+
+  return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar activeHref="/" />
 
@@ -138,11 +125,31 @@ return (
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            {filtered.map((room) => (
-              <RoomCard key={room.id} {...room} />
-            ))}
-          </div>
+          {isLoading ? (
+            <p className="text-sm text-gray-400">Carregando salas...</p>
+          ) : rooms.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-2">
+              <p className="text-sm">Nenhuma sala cadastrada neste instituto.</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-2">
+              <p className="text-sm">Nenhuma sala encontrada para o filtro selecionado.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              {filtered.map(({ room, occupancy }) => (
+                <RoomCard
+                  key={room._id}
+                  name={room.name}
+                  status={occupancy.status}
+                  currentEvent={occupancy.currentEvent}
+                  nextEvent={occupancy.nextEvent}
+                  capacity={room.capacity}
+                  freeUntil={occupancy.freeUntil}
+                />
+              ))}
+            </div>
+          )}
         </main>
 
         <Footer />
