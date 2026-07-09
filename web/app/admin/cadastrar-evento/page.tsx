@@ -8,9 +8,11 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Info, CheckCircle, Calendar, Clock, Users, ChevronDown, AlertTriangle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
+  getInstitutes,
   getRooms,
   createSchedule,
   ApiError,
+  Institute,
   Room,
   ScheduleCategory,
   ScheduleRecurrence,
@@ -21,13 +23,15 @@ import {
 export default function CadastrarEventoAdmin() {
   const router = useRouter();
   const { user } = useAuth();
-  const instituteId = user?.institutes?.[0]?.id;
 
+  const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const [isLoadingInstitutes, setIsLoadingInstitutes] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(false);
 
   const [title, setTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ScheduleCategory | "">("");
+  const [selectedInstituteId, setSelectedInstituteId] = useState("");
   const [selectedRoomId, setSelectedRoomId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -39,10 +43,12 @@ export default function CadastrarEventoAdmin() {
   const [notes, setNotes] = useState("");
 
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [instituteOpen, setInstituteOpen] = useState(false);
   const [roomOpen, setRoomOpen] = useState(false);
   const [recurrenceOpen, setRecurrenceOpen] = useState(false);
 
   const categoryRef = useRef<HTMLDivElement>(null);
+  const instituteRef = useRef<HTMLDivElement>(null);
   const roomRef = useRef<HTMLDivElement>(null);
   const recurrenceRef = useRef<HTMLDivElement>(null);
 
@@ -51,18 +57,37 @@ export default function CadastrarEventoAdmin() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!instituteId) return;
+    getInstitutes()
+      .then(setInstitutes)
+      .catch(() => setError("Não foi possível carregar os institutos."))
+      .finally(() => setIsLoadingInstitutes(false));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const adminInstituteId = user.institutes?.[0]?.id;
+    if (adminInstituteId) setSelectedInstituteId(adminInstituteId);
+  }, [user]);
+
+  useEffect(() => {
+    if (!selectedInstituteId) {
+      setRooms([]);
+      return;
+    }
     setIsLoadingRooms(true);
-    getRooms({ institute_id: instituteId, status: "ativa" })
+    getRooms({ institute_id: selectedInstituteId, status: "ativa" })
       .then(setRooms)
       .catch(() => setError("Não foi possível carregar as salas do instituto."))
       .finally(() => setIsLoadingRooms(false));
-  }, [instituteId]);
+  }, [selectedInstituteId]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
         setCategoryOpen(false);
+      }
+      if (instituteRef.current && !instituteRef.current.contains(e.target as Node)) {
+        setInstituteOpen(false);
       }
       if (roomRef.current && !roomRef.current.contains(e.target as Node)) {
         setRoomOpen(false);
@@ -80,6 +105,18 @@ export default function CadastrarEventoAdmin() {
   const audienceExceedsCapacity =
     !!selectedRoom && Number.isInteger(audienceNumber) && audienceNumber > selectedRoom.capacity;
 
+  const isDifferentInstitute =
+    !!user?.institutes?.[0]?.id &&
+    !!selectedInstituteId &&
+    selectedInstituteId !== user.institutes[0].id;
+
+  const handleInstituteChange = (id: string) => {
+    setSelectedInstituteId(id);
+    setSelectedRoomId("");
+    setEquipment([]);
+    setInstituteOpen(false);
+  };
+
   const handleRoomChange = (id: string) => {
     setSelectedRoomId(id);
     setEquipment([]);
@@ -96,14 +133,10 @@ export default function CadastrarEventoAdmin() {
     e.preventDefault();
     setError("");
 
-    if (!instituteId) {
-      setError("Seu usuário não está vinculado a nenhum instituto.");
-      return;
-    }
-
     const errors: Record<string, boolean> = {
       title: !title.trim(),
       category: !selectedCategory,
+      institute: !selectedInstituteId,
       room: !selectedRoomId,
       date: !date,
       startTime: !startTime,
@@ -124,7 +157,7 @@ export default function CadastrarEventoAdmin() {
         title: title.trim(),
         category: selectedCategory as ScheduleCategory,
         room_id: selectedRoomId,
-        institute_id: instituteId,
+        institute_id: selectedInstituteId,
         date,
         start_time: startTime,
         end_time: endTime,
@@ -225,40 +258,84 @@ export default function CadastrarEventoAdmin() {
                   </div>
 
                   {/* Linha 2: Onde */}
-                  <div className="space-y-2">
-                    <label className="font-bold text-sm text-gray-700">Sala Pretendida</label>
-                    <div className="relative" ref={roomRef}>
-                      <button
-                        type="button"
-                        onClick={() => setRoomOpen((v) => !v)}
-                        disabled={isLoadingRooms}
-                        className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors disabled:opacity-50 ${
-                          fieldErrors.room ? "border-red-500" : "border-gray-300"
-                        }`}
-                      >
-                        {isLoadingRooms
-                          ? "Carregando..."
-                          : selectedRoom
-                          ? `${selectedRoom.name} (Capacidade: ${selectedRoom.capacity})`
-                          : "Selecione o espaço..."}
-                        <ChevronDown size={14} className="text-gray-400" />
-                      </button>
-                      {roomOpen && (
-                        <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-56 overflow-y-auto">
-                          {rooms.map((room) => (
-                            <li
-                              key={room._id}
-                              onClick={() => handleRoomChange(room._id)}
-                              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                            >
-                              {room.name} (Capacidade: {room.capacity})
-                            </li>
-                          ))}
-                          {rooms.length === 0 && (
-                            <li className="px-3 py-2 text-sm text-gray-400">Nenhuma sala ativa neste instituto.</li>
-                          )}
-                        </ul>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm text-gray-700">Instituto</label>
+                      <div className="relative" ref={instituteRef}>
+                        <button
+                          type="button"
+                          onClick={() => setInstituteOpen((v) => !v)}
+                          disabled={isLoadingInstitutes}
+                          className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors disabled:opacity-50 ${
+                            isDifferentInstitute
+                              ? "border-yellow-400"
+                              : fieldErrors.institute
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {isLoadingInstitutes
+                            ? "Carregando..."
+                            : institutes.find((i) => i.id === selectedInstituteId)?.name ?? "Selecione o instituto..."}
+                          <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {instituteOpen && (
+                          <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-56 overflow-y-auto">
+                            {institutes.map((institute) => (
+                              <li
+                                key={institute.id}
+                                onClick={() => handleInstituteChange(institute.id)}
+                                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                              >
+                                {institute.name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      {isDifferentInstitute && (
+                        <p className="text-xs text-yellow-600 font-semibold">
+                          Este instituto é diferente do seu instituto vinculado.
+                        </p>
                       )}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm text-gray-700">Sala Pretendida</label>
+                      <div className="relative" ref={roomRef}>
+                        <button
+                          type="button"
+                          onClick={() => setRoomOpen((v) => !v)}
+                          disabled={!selectedInstituteId || isLoadingRooms}
+                          className={`flex items-center justify-between gap-2 w-full bg-white border rounded p-3 text-sm text-gray-700 hover:bg-gray-50 focus:ring-[#000666] focus:border-[#000666] outline-none transition-colors disabled:opacity-50 ${
+                            fieldErrors.room ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          {!selectedInstituteId
+                            ? "Selecione o instituto primeiro"
+                            : isLoadingRooms
+                            ? "Carregando..."
+                            : selectedRoom
+                            ? `${selectedRoom.name} (Capacidade: ${selectedRoom.capacity})`
+                            : "Selecione o espaço..."}
+                          <ChevronDown size={14} className="text-gray-400" />
+                        </button>
+                        {roomOpen && (
+                          <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10 max-h-56 overflow-y-auto">
+                            {rooms.map((room) => (
+                              <li
+                                key={room._id}
+                                onClick={() => handleRoomChange(room._id)}
+                                className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                              >
+                                {room.name} (Capacidade: {room.capacity})
+                              </li>
+                            ))}
+                            {rooms.length === 0 && (
+                              <li className="px-3 py-2 text-sm text-gray-400">Nenhuma sala ativa neste instituto.</li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   </div>
 

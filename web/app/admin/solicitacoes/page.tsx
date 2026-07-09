@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
 import { Check, X, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +35,7 @@ function formatRequestedAt(iso: string): string {
 }
 
 export default function SolicitacoesPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const instituteId = user?.institutes[0]?.id;
 
   const [requests, setRequests] = useState<Schedule[]>([]);
@@ -53,10 +54,13 @@ export default function SolicitacoesPage() {
   }, []);
 
   useEffect(() => {
-    if (!instituteId) return;
+    if (!instituteId) {
+      if (!isAuthLoading) setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     loadRequests(instituteId).finally(() => setIsLoading(false));
-  }, [instituteId, loadRequests]);
+  }, [instituteId, isAuthLoading, loadRequests]);
 
   const roomNameById = useMemo(
     () => new Map(rooms.map((room) => [room._id, room.name])),
@@ -91,6 +95,8 @@ export default function SolicitacoesPage() {
       <AdminSidebar activeHref="/admin/solicitacoes" />
 
       <div className="flex flex-col flex-1 overflow-hidden">
+        <AdminTopBar />
+
         <div className="px-8 py-5 bg-white border-b border-gray-200 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Solicitações Pendentes</h1>
@@ -131,6 +137,7 @@ export default function SolicitacoesPage() {
               const categoryLabel =
                 SCHEDULE_CATEGORIES.find((c) => c.value === req.category)?.label ??
                 req.category;
+              const isTroca = req.notes.startsWith("[TROCA]");
               return (
                 <div
                   key={req._id}
@@ -144,6 +151,11 @@ export default function SolicitacoesPage() {
                       <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200">
                         {categoryLabel}
                       </span>
+                      {isTroca && (
+                        <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200">
+                          Troca
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-500">
                       {req.title}: {roomNameById.get(req.room_id) ?? "Sala removida"} (

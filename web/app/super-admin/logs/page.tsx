@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTopBar from "@/components/admin/AdminTopBar";
 import Footer from "@/components/home/Footer";
-import { Search, Shield, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { getLogs, ApiError, AuditLog } from "@/lib/api";
 
 const actionLabels: Record<string, { label: string; className: string }> = {
@@ -62,15 +63,11 @@ export default function LogsPage() {
       <AdminSidebar activeHref="/super-admin/logs" />
 
       <div className="flex flex-col flex-1 overflow-hidden">
-        <div className="px-8 py-5 bg-white border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Logs do Sistema</h1>
-            <p className="text-sm text-gray-400 mt-0.5">Histórico de ações realizadas pelos administradores.</p>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-            <Shield size={13} className="text-indigo-900" />
-            <span>Visível apenas para <span className="font-bold text-indigo-900">Superadmin</span></span>
-          </div>
+        <AdminTopBar />
+
+        <div className="px-8 py-5 bg-white border-b border-gray-200">
+          <h1 className="text-xl font-bold text-gray-900">Logs do Sistema</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Histórico de ações realizadas pelos administradores.</p>
         </div>
 
         <div className="px-8 py-4 bg-white border-b border-gray-200 flex items-center gap-3">

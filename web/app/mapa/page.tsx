@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { ChevronDown, Building2, Layers, BookOpen, Loader2 } from "lucide-react";
 import Sidebar from "@/components/home/Sidebar";
@@ -21,7 +21,6 @@ import { computeRoomOccupancy } from "@/lib/roomOccupancy";
 
 const MapViewCanvas = dynamic(() => import("@/components/mapa/MapViewCanvas"), { ssr: false });
 
-const FLOORS = [1, 2, 3];
 const ROOM_CATEGORIES = new Set(["sala_aula", "auditorio"]);
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -76,6 +75,15 @@ export default function MapaPage() {
       })
       .catch(() => setInstitutes([]));
   }, []);
+
+  const floorOptions = useMemo(
+    () => Array.from({ length: Math.max(selectedInstitute?.floors ?? 1, 1) }, (_, i) => i + 1),
+    [selectedInstitute]
+  );
+
+  useEffect(() => {
+    if (selectedFloor > floorOptions.length) setSelectedFloor(1);
+  }, [floorOptions, selectedFloor]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -197,7 +205,7 @@ export default function MapaPage() {
                 </button>
                 {floorOpen && (
                   <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
-                    {FLOORS.map((floor) => (
+                    {floorOptions.map((floor) => (
                       <li
                         key={floor}
                         onClick={() => { setSelectedFloor(floor); setFloorOpen(false); }}
