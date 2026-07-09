@@ -83,6 +83,23 @@ services:
     networks:
       - salas_network
 
+  map-service:
+    build: ./services/map-service
+    container_name: salas-ufba-map-service
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      NODE_ENV: development
+      MONGODB_URI: mongodb://mongo:27017/db_maps
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - salas_network
+
   bff:
     build: ./services/bff
     container_name: salas-ufba-bff
@@ -92,10 +109,12 @@ services:
       PORT: 8000
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       ROOMS_SERVICE_URL: ${ROOMS_SERVICE_URL}
+      MAP_SERVICE_URL: ${MAP_SERVICE_URL}
       JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - auth-service
       - rooms-service
+      - map-service
     networks:
       - salas_network
 

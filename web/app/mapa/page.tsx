@@ -1,20 +1,29 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { ChevronDown, Building2, Layers, BookOpen, Loader2 } from "lucide-react";
 import Sidebar from "@/components/home/Sidebar";
 import Footer from "@/components/home/Footer";
 import StatusBadge from "@/components/home/StatusBradge";
-import { MapShape, MapData } from "@/types/map";
-import { getInstitutes, Institute } from "@/lib/api";
+import { MapShape } from "@/types/map";
+import {
+  getInstitutes,
+  getMap,
+  getRooms,
+  getSchedulesToday,
+  ApiError,
+  Institute,
+  Room,
+  Schedule,
+} from "@/lib/api";
+import { computeRoomOccupancy } from "@/lib/roomOccupancy";
 
 const MapViewCanvas = dynamic(() => import("@/components/mapa/MapViewCanvas"), { ssr: false });
 
 const FLOORS = [1, 2, 3];
 const ROOM_CATEGORIES = new Set(["sala_aula", "auditorio"]);
-
-const storageKey = (instituteId: string, floor: number) => `map_${instituteId}_floor_${floor}`;
+const REFRESH_INTERVAL_MS = 60_000;
 
 interface RoomEvent {
   title: string;
@@ -22,13 +31,6 @@ interface RoomEvent {
   startTime: string;
   endTime: string;
 }
-
-const mockEvents: Record<string, RoomEvent> = {
-  "Sala 101":      { title: "Cálculo Diferencial I", professor: "Prof. Ricardo Almeida", startTime: "08:00", endTime: "11:30" },
-  "Laboratório 1": { title: "Algoritmos I",           professor: "Prof. André Lima",      startTime: "07:55", endTime: "09:35" },
-  "Auditório":     { title: "Seminário de IA",        professor: "Profª. Carla Matos",   startTime: "10:00", endTime: "12:00" },
-  "Sala de Aula":  { title: "Engenharia de Software", professor: "Prof. Bruno Ferreira", startTime: "08:50", endTime: "10:40" },
-};
 
 const cardAccent: Record<string, string> = {
   occupied: "bg-indigo-900",
@@ -45,6 +47,9 @@ export default function MapaPage() {
   const [selectedInstitute, setSelectedInstitute] = useState<Institute | null>(null);
   const [selectedFloor, setSelectedFloor]         = useState(1);
   const [shapes, setShapes]                       = useState<MapShape[]>([]);
+  const [isLoadingMap, setIsLoadingMap]           = useState(false);
+  const [rooms, setRooms]                         = useState<Room[]>([]);
+  const [todaySchedules, setTodaySchedules]       = useState<Schedule[]>([]);
   const [selectedId, setSelectedId]               = useState<string | null>(null);
   const [instituteOpen, setInstituteOpen]         = useState(false);
   const [floorOpen, setFloorOpen]                 = useState(false);
@@ -83,23 +88,66 @@ export default function MapaPage() {
 
   useEffect(() => {
     if (!selectedInstitute) return;
-    const stored = localStorage.getItem(storageKey(selectedInstitute.id, selectedFloor));
-    if (stored) {
-      try { setShapes((JSON.parse(stored) as MapData).shapes); }
-      catch { setShapes([]); }
-    } else {
-      setShapes([]);
-    }
-    setSelectedId(null);
+    let cancelled = false;
+
+    setIsLoadingMap(true);
+    getMap(selectedInstitute.id, selectedFloor)
+      .then((map) => {
+        if (!cancelled) setShapes(map.shapes);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setShapes([]);
+        if (!(err instanceof ApiError && err.status === 404)) console.error(err);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSelectedId(null);
+          setIsLoadingMap(false);
+        }
+      });
+
+    return () => { cancelled = true; };
   }, [selectedInstitute, selectedFloor]);
 
-  const occupiedIds = new Set(
-    shapes.filter((s) => ROOM_CATEGORIES.has(s.category) && mockEvents[s.label]).map((s) => s.id)
-  );
+  const loadOccupancy = useCallback(async (instituteId: string) => {
+    const [roomsData, schedulesData] = await Promise.all([
+      getRooms({ institute_id: instituteId, status: "ativa" }),
+      getSchedulesToday(instituteId),
+    ]);
+    setRooms(roomsData);
+    setTodaySchedules(schedulesData);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedInstitute) return;
+
+    loadOccupancy(selectedInstitute.id);
+    const interval = setInterval(
+      () => loadOccupancy(selectedInstitute.id),
+      REFRESH_INTERVAL_MS
+    );
+    return () => clearInterval(interval);
+  }, [selectedInstitute, loadOccupancy]);
+
+  const roomsByName = new Map(rooms.map((r) => [r.name, r]));
+  const occupiedIds = new Set<string>();
+  const events: Record<string, RoomEvent> = {};
+
+  for (const shape of shapes) {
+    if (!ROOM_CATEGORIES.has(shape.category)) continue;
+    const room = roomsByName.get(shape.label);
+    if (!room) continue;
+    const occupancy = computeRoomOccupancy(room, todaySchedules);
+    if (occupancy.status !== "LIVRE") {
+      occupiedIds.add(shape.id);
+      if (occupancy.currentEvent) events[shape.label] = occupancy.currentEvent;
+    }
+  }
 
   const selectedShape    = shapes.find((s) => s.id === selectedId) ?? null;
   const isSelectableRoom = selectedShape ? ROOM_CATEGORIES.has(selectedShape.category) : false;
-  const selectedEvent    = isSelectableRoom && selectedShape ? mockEvents[selectedShape.label] ?? null : null;
+  const selectedEvent    = isSelectableRoom && selectedShape ? events[selectedShape.label] ?? null : null;
   const isOccupied       = selectedShape ? occupiedIds.has(selectedShape.id) : false;
 
   return (
@@ -170,7 +218,12 @@ export default function MapaPage() {
                 ref={canvasRef}
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
             >
-                {shapes.length === 0 ? (
+                {isLoadingMap ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                    <Loader2 size={20} className="animate-spin" />
+                    <p className="text-sm">Carregando mapa...</p>
+                    </div>
+                ) : shapes.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
                     <p className="text-sm">Nenhum mapa cadastrado para este andar.</p>
                     </div>
@@ -182,7 +235,7 @@ export default function MapaPage() {
                     onSelect={setSelectedId}
                     width={canvasWidth}
                     height={600}
-                    events={mockEvents}
+                    events={events}
                     />
                 )}
 

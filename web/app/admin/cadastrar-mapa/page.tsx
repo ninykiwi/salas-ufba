@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ChevronDown, Building2, Layers, Trash2, Save, X } from "lucide-react";
+import { ChevronDown, Building2, Layers, Trash2, Save, X, Loader2 } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import {
-  MapShape, MapData, ShapeType, RoomCategory,
+  MapShape, ShapeType, RoomCategory,
   categoryLabels, categoryColors, categoryDefaults,
 } from "@/types/map";
-import { getInstitutes, Institute } from "@/lib/api";
+import { getInstitutes, getMap, saveMap, Institute, ApiError } from "@/lib/api";
 
 const MapCanvas = dynamic(() => import("@/components/admin/MapCanvas"), { ssr: false });
 
@@ -20,8 +20,6 @@ const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
   { type: "triangle", label: "Triângulo" },
 ];
 
-const storageKey = (instituteId: string, floor: number) => `map_${instituteId}_floor_${floor}`;
-
 interface ModalProps {
   title: string;
   description: string;
@@ -29,9 +27,10 @@ interface ModalProps {
   confirmClass: string;
   onConfirm: () => void;
   onCancel: () => void;
+  error?: string | null;
 }
 
-function Modal({ title, description, confirmLabel, confirmClass, onConfirm, onCancel }: ModalProps) {
+function Modal({ title, description, confirmLabel, confirmClass, onConfirm, onCancel, error }: ModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm flex flex-col gap-4">
@@ -42,6 +41,7 @@ function Modal({ title, description, confirmLabel, confirmClass, onConfirm, onCa
           </button>
         </div>
         <p className="text-sm text-gray-500">{description}</p>
+        {error && <p className="text-sm text-red-600">{error}</p>}
         <div className="flex items-center justify-end gap-2 pt-1">
           <button
             onClick={onCancel}
@@ -75,6 +75,8 @@ export default function CadastrarMapaPage() {
   const [floorOpen, setFloorOpen]                 = useState(false);
   const [categoryOpen, setCategoryOpen]           = useState(false);
   const [showSaveModal, setShowSaveModal]         = useState(false);
+  const [saveError, setSaveError]                 = useState<string | null>(null);
+  const [isLoadingMap, setIsLoadingMap]           = useState(false);
   const [pendingNav, setPendingNav]               = useState<{ institute?: Institute; floor?: number } | null>(null);
 
   const instituteRef = useRef<HTMLDivElement>(null);
@@ -195,18 +197,23 @@ export default function CadastrarMapaPage() {
       .catch(() => setInstitutes([]));
   }, []);
 
-  const loadMap = (instituteId: string, floor: number) => {
-    const stored = localStorage.getItem(storageKey(instituteId, floor));
-    if (stored) {
-      try { setShapes((JSON.parse(stored) as MapData).shapes); }
-      catch { setShapes([]); }
-    } else {
+  const loadMap = async (instituteId: string, floor: number) => {
+    setIsLoadingMap(true);
+    try {
+      const map = await getMap(instituteId, floor);
+      setShapes(map.shapes);
+    } catch (err) {
       setShapes([]);
+      if (!(err instanceof ApiError && err.status === 404)) {
+        console.error(err);
+      }
+    } finally {
+      setSelectedId(null);
+      setHistory([]);
+      setFuture([]);
+      setIsDirty(false);
+      setIsLoadingMap(false);
     }
-    setSelectedId(null);
-    setHistory([]);
-    setFuture([]);
-    setIsDirty(false);
   };
 
   useEffect(() => {
@@ -267,17 +274,23 @@ export default function CadastrarMapaPage() {
     setSelectedId(null);
   };
 
-  const handleSaveConfirm = () => {
+  const handleSaveConfirm = async () => {
     if (!selectedInstitute) return;
-    const data: MapData = {
-      institute_id: selectedInstitute.id,
-      institute_name: selectedInstitute.name,
-      floor: selectedFloor,
-      shapes,
-    };
-    localStorage.setItem(storageKey(selectedInstitute.id, selectedFloor), JSON.stringify(data));
-    setIsDirty(false);
-    setShowSaveModal(false);
+    setSaveError(null);
+    try {
+      await saveMap({
+        institute_id: selectedInstitute.id,
+        institute_name: selectedInstitute.name,
+        floor: selectedFloor,
+        shapes,
+      });
+      setIsDirty(false);
+      setShowSaveModal(false);
+    } catch (err) {
+      setSaveError(
+        err instanceof ApiError ? err.message : "Erro ao salvar o mapa."
+      );
+    }
   };
 
   const selectedShape = shapes.find((s) => s.id === selectedId) ?? null;
@@ -298,7 +311,8 @@ export default function CadastrarMapaPage() {
           confirmLabel="Salvar"
           confirmClass="bg-indigo-900 hover:bg-indigo-800"
           onConfirm={handleSaveConfirm}
-          onCancel={() => setShowSaveModal(false)}
+          onCancel={() => { setShowSaveModal(false); setSaveError(null); }}
+          error={saveError}
         />
       )}
 
@@ -371,7 +385,7 @@ export default function CadastrarMapaPage() {
           </div>
 
           <button
-            onClick={() => setShowSaveModal(true)}
+            onClick={() => { setSaveError(null); setShowSaveModal(true); }}
             disabled={!isDirty}
             className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-colors ${
               isDirty
@@ -440,16 +454,23 @@ export default function CadastrarMapaPage() {
           </div>
 
           <div className="flex-1 overflow-auto p-6">
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm inline-block">
-              <MapCanvas
-                shapes={shapes}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onChange={(updated) => pushShapes(updated)}
-                width={900}
-                height={600}
-              />
-            </div>
+            {isLoadingMap ? (
+              <div className="flex items-center justify-center h-full text-gray-400 gap-2">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Carregando mapa...</span>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm inline-block">
+                <MapCanvas
+                  shapes={shapes}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
+                  onChange={(updated) => pushShapes(updated)}
+                  width={900}
+                  height={600}
+                />
+              </div>
+            )}
           </div>
 
           <div className="w-56 shrink-0 border-l border-gray-200 bg-white px-4 py-6">

@@ -27,15 +27,19 @@ function chunk<T>(items: T[], size: number): T[][] {
 }
 
 export default function ViewPage() {
-  const [institute, setInstitute] = useState<Institute | null>(null);
+  const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const [selectedInstitute, setSelectedInstitute] = useState<string | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [todaySchedules, setTodaySchedules] = useState<Schedule[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
     getInstitutes()
-      .then((data) => setInstitute(data[0] ?? null))
-      .catch(() => setInstitute(null));
+      .then((data) => {
+        setInstitutes(data);
+        if (data.length > 0) setSelectedInstitute(data[0].id);
+      })
+      .catch(() => setInstitutes([]));
   }, []);
 
   const loadOccupancy = useCallback(async (instituteId: string) => {
@@ -48,12 +52,12 @@ export default function ViewPage() {
   }, []);
 
   useEffect(() => {
-    if (!institute) return;
+    if (!selectedInstitute) return;
 
-    loadOccupancy(institute.id);
-    const interval = setInterval(() => loadOccupancy(institute.id), REFRESH_INTERVAL_MS);
+    loadOccupancy(selectedInstitute);
+    const interval = setInterval(() => loadOccupancy(selectedInstitute), REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [institute, loadOccupancy]);
+  }, [selectedInstitute, loadOccupancy]);
 
   const viewRooms: ViewRoom[] = rooms.map((room) => {
     const occupancy = computeRoomOccupancy(room, todaySchedules);
@@ -83,14 +87,20 @@ export default function ViewPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col px-8 py-6 gap-6">
       <ViewHeader
-        institute={institute?.name ?? "Carregando..."}
-        location="Campus Federação — Pavilhão de Aulas (PAF 2)"
+        institutes={institutes}
+        selectedInstitute={selectedInstitute}
+        onInstituteChange={setSelectedInstitute}
+        location="Campus Federação/Ondina"
       />
 
       <div className="grid grid-cols-3 gap-4 flex-1">
-        {currentRooms.map((room) => (
-          <ViewRoomCard key={room.id} {...room} />
-        ))}
+        {viewRooms.length === 0 ? (
+          <div className="col-span-3 flex flex-col items-center justify-center text-gray-400 gap-2">
+            <p className="text-sm">Nenhuma sala cadastrada neste instituto.</p>
+          </div>
+        ) : (
+          currentRooms.map((room) => <ViewRoomCard key={room.id} {...room} />)
+        )}
       </div>
 
       <ViewFooter

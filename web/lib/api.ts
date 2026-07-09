@@ -1,3 +1,5 @@
+import { MapShape } from "@/types/map";
+
 export type Role = "SUPERADMIN" | "ADMIN" | "PROFESSOR";
 
 export interface InstituteRef {
@@ -480,4 +482,42 @@ export async function getLogs(params?: {
     credentials: "include",
   });
   return handleResponse<AuditLog[]>(response);
+}
+
+export interface ApiMap {
+  _id: string;
+  institute_id: string;
+  institute_name: string;
+  floor: number;
+  shapes: MapShape[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveMapPayload {
+  institute_id: string;
+  institute_name: string;
+  floor: number;
+  shapes: MapShape[];
+}
+
+export async function getMap(
+  institute_id: string,
+  floor: number
+): Promise<ApiMap> {
+  const response = await fetch(
+    `/api/maps${buildQueryString({ institute_id, floor: String(floor) })}`,
+    { credentials: "include" }
+  );
+  return handleResponse<ApiMap>(response);
+}
+
+export async function saveMap(data: SaveMapPayload): Promise<ApiMap> {
+  const response = await fetch("/api/maps", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+  return handleResponse<ApiMap>(response);
 }

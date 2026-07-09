@@ -54,9 +54,16 @@ export default function Home() {
     getInstitutes()
       .then((data) => {
         setInstitutes(data);
-        if (data.length > 0) setSelectedInstitute(data[0].id);
+        if (data.length > 0) {
+          setSelectedInstitute(data[0].id);
+        } else {
+          setIsLoading(false);
+        }
       })
-      .catch(() => setInstitutes([]));
+      .catch(() => {
+        setInstitutes([]);
+        setIsLoading(false);
+      });
   }, []);
 
   const [showFilters, setShowFilters] = useState(false);
@@ -195,8 +202,12 @@ export default function Home() {
             {/* --- CONTAINER DO CALENDÁRIO --- */}
             {isLoading ? (
               <p className="text-sm text-gray-400">Carregando agenda...</p>
+            ) : rooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-150 text-gray-400 gap-2 bg-white border border-gray-200 rounded-xl shadow-sm">
+                <p className="text-sm">Nenhuma sala cadastrada neste instituto.</p>
+              </div>
             ) : (
-            <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-[600px]">
+            <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-150">
               <div className="flex-1 overflow-auto custom-scrollbar">
                 <div className="min-w-[1000px] h-full flex flex-col">
 

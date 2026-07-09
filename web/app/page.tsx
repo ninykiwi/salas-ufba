@@ -37,9 +37,16 @@ export default function Home() {
     getInstitutes()
       .then((data) => {
         setInstitutes(data);
-        if (data.length > 0) setSelectedInstitute(data[0].id);
+        if (data.length > 0) {
+          setSelectedInstitute(data[0].id);
+        } else {
+          setIsLoading(false);
+        }
       })
-      .catch(() => setInstitutes([]));
+      .catch(() => {
+        setInstitutes([]);
+        setIsLoading(false);
+      });
   }, []);
 
   const [filter, setFilter] = useState<StatusFilter>("TODAS");
@@ -120,6 +127,14 @@ export default function Home() {
 
           {isLoading ? (
             <p className="text-sm text-gray-400">Carregando salas...</p>
+          ) : rooms.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-2">
+              <p className="text-sm">Nenhuma sala cadastrada neste instituto.</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-2">
+              <p className="text-sm">Nenhuma sala encontrada para o filtro selecionado.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
               {filtered.map(({ room, occupancy }) => (
