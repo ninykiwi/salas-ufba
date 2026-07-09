@@ -109,36 +109,26 @@ export default function AdminRoomCard({
         {/* Rodapé unificado */}
         <div className="mt-auto bg-gray-50 -mx-5 -mb-5 p-4 flex items-center justify-between border-t border-gray-100 text-xs">
           {status === "LIVRE" ? (
-            <>
-              <Link href="/salas/cadastrar-evento">
+            <Link href="/salas/cadastrar-evento">
               <button className="bg-[#000666] text-white px-3 py-2 rounded-lg font-bold text-[10px] uppercase hover:opacity-90 transition-opacity">
                 Solicitar Reserva
               </button>
-              </Link>
-              <button className="text-[#000666] font-bold hover:underline cursor-pointer">
-                Ver Horários
-              </button>
-            </>
+            </Link>
           ) : (
-            <>
-              <div className="flex items-center gap-3 text-gray-500 font-medium">
-                {/* MODIFICAÇÃO: onClick adicionado aqui para abrir o modal */}
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-1 hover:text-[#000666] transition-colors cursor-pointer"
-                >
-                  <ArrowLeftRight size={14} />
-                  <span>Solicitar Troca</span>
-                </button>
-                <div className="flex items-center gap-1">
-                  <Users size={14} />
-                  <span>{capacity} Pessoas</span>
-                </div>
-              </div>
-              <button className="text-[#000666] font-bold hover:underline cursor-pointer">
-                Ver Horários
+            <div className="flex items-center gap-3 text-gray-500 font-medium">
+              {/* MODIFICAÇÃO: onClick adicionado aqui para abrir o modal */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1 hover:text-[#000666] transition-colors cursor-pointer"
+              >
+                <ArrowLeftRight size={14} />
+                <span>Solicitar Troca</span>
               </button>
-            </>
+              <div className="flex items-center gap-1">
+                <Users size={14} />
+                <span>{capacity} Pessoas</span>
+              </div>
+            </div>
           )}
         </div>
       </div>

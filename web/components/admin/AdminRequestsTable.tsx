@@ -5,40 +5,44 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import AdminRequestDetailsModal from "./AdminRequestDetailsModal";
 
 export interface Solicitacao {
-  id: number;
+  id: string;
   professor: string;
   sala: string;
   horario: string;
   data: string;
   motivo: string;
-  tipo?: "TROCA" | "EMPRESTIMO" | "RESERVA" | "CANCELAMENTO";
-  frequencia?: string;          
-  responsavelAtual?: string;    
-  descricao?: string;           
+  tipo: "TROCA" | "RESERVA";
+  frequencia?: string;
+  responsavelAtual?: string;
+  descricao?: string;
 }
 
 interface AdminRequestsTableProps {
-  initialRequests: Solicitacao[];
+  requests: Solicitacao[];
+  processingId: string | null;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
 }
 
-export default function AdminRequestsTable({ initialRequests }: AdminRequestsTableProps) {
-  // Estado do filtro baseado exatamente no seu modelo funcional de abas
+export default function AdminRequestsTable({
+  requests,
+  processingId,
+  onAccept,
+  onReject,
+}: AdminRequestsTableProps) {
   const [tipoFiltro, setTipoFiltro] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Estados para controle do Modal Detalhado
   const [selectedRequest, setSelectedRequest] = useState<Solicitacao | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filtragem em tempo de execução direto da propriedade recebida
-  const solicitacoesFiltradas = initialRequests.filter((req) => {
+  const solicitacoesFiltradas = requests.filter((req) => {
     if (tipoFiltro === "Todos") return true;
     return req.tipo === tipoFiltro;
   });
 
-  // Paginação recalculada dinamicamente com base no filtro ativo
-  const totalPages = Math.ceil(solicitacoesFiltradas.length / itemsPerPage);
+  const totalPages = Math.ceil(solicitacoesFiltradas.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentRequests = solicitacoesFiltradas.slice(indexOfFirstItem, indexOfLastItem);
@@ -53,15 +57,7 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
 
   const handleFilterChange = (tab: string) => {
     setTipoFiltro(tab);
-    setCurrentPage(1); // Evita bugs de página órfã ao filtrar
-  };
-
-  const handleAccept = (id: number) => {
-    alert(`Solicitação #${id} aceita com sucesso!`);
-  };
-
-  const handleReject = (id: number) => {
-    alert(`Solicitação #${id} recusada.`);
+    setCurrentPage(1);
   };
 
   const openDetails = (req: Solicitacao) => {
@@ -69,18 +65,15 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
     setIsModalOpen(true);
   };
 
-  // Mapeamento visual estético dos Badges de Tipo
   const typeBadges: Record<string, { text: string; classes: string }> = {
     RESERVA: { text: "Reserva", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
-    EMPRESTIMO: { text: "Empréstimo", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
-    TROCA: { text: "Troca", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
-    CANCELAMENTO: { text: "Cancelamento", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-gray-100 text-gray-600" },
+    TROCA: { text: "Troca", classes: "inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-100 text-amber-700" },
   };
 
   return (
     <>
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mt-12 shadow-sm">
-        
+
         {/* Barra Superior Alterada */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           {/* Lado Esquerdo: Título da Seção */}
@@ -88,8 +81,8 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
 
           {/* Lado Direito: Apenas os botões de Filtro */}
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            {(["Todos", "RESERVA", "EMPRESTIMO", "TROCA", "CANCELAMENTO"] as const).map((tab) => {
-              const labelMap = { Todos: "Todos", RESERVA: "Reservas", EMPRESTIMO: "Empréstimos", TROCA: "Trocas", CANCELAMENTO: "Cancelamentos"};
+            {(["Todos", "RESERVA", "TROCA"] as const).map((tab) => {
+              const labelMap = { Todos: "Todos", RESERVA: "Reservas", TROCA: "Trocas" };
               return (
                 <button
                   key={tab}
@@ -108,7 +101,7 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
           </div>
         </div>
 
-        {/* Cabeçalho das Colunas — Trocado de vez "MOTIVO" por "TIPO DA SOLICITAÇÃO" */}
+        {/* Cabeçalho das Colunas */}
         <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-[#f8f9fa] border-b border-gray-200 text-xs font-bold text-gray-500 tracking-wider">
           <div className="col-span-4">PROFESSOR / SALA</div>
           <div className="col-span-3">HORÁRIO / DATA</div>
@@ -120,8 +113,8 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
         <div className="divide-y divide-gray-200">
           {currentRequests.length > 0 ? (
             currentRequests.map((req) => {
-              // Fallback para caso o objeto não tenha tipo definido no banco/mock
-              const badge = typeBadges[req.tipo || "RESERVA"] || typeBadges.RESERVA;
+              const badge = typeBadges[req.tipo] ?? typeBadges.RESERVA;
+              const isProcessing = processingId === req.id;
 
               return (
                 <div
@@ -144,7 +137,7 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
                     <p className="text-xs text-gray-500 mt-0.5">{req.horario}</p>
                   </div>
 
-                  {/* Coluna de Tipo Substituindo Completo o Antigo Motivo */}
+                  {/* Tipo */}
                   <div className="col-span-3">
                     <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${badge.classes}`}>
                       {badge.text}
@@ -153,15 +146,17 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
 
                   {/* Botões de Ação com Stop Propagation */}
                   <div className="col-span-2 flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      onClick={() => handleAccept(req.id)}
-                      className="px-4 py-1.5 bg-[#000666] text-white rounded text-xs font-semibold hover:bg-blue-900 transition-colors"
+                    <button
+                      onClick={() => onAccept(req.id)}
+                      disabled={isProcessing}
+                      className="px-4 py-1.5 bg-[#000666] text-white rounded text-xs font-semibold hover:bg-blue-900 transition-colors disabled:opacity-50"
                     >
                       Aceitar
                     </button>
-                    <button 
-                      onClick={() => handleReject(req.id)}
-                      className="px-4 py-1.5 border border-[#d90000] text-[#d90000] rounded text-xs font-semibold hover:bg-red-50 transition-colors"
+                    <button
+                      onClick={() => onReject(req.id)}
+                      disabled={isProcessing}
+                      className="px-4 py-1.5 border border-[#d90000] text-[#d90000] rounded text-xs font-semibold hover:bg-red-50 transition-colors disabled:opacity-50"
                     >
                       Recusar
                     </button>
@@ -216,8 +211,8 @@ export default function AdminRequestsTable({ initialRequests }: AdminRequestsTab
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         request={selectedRequest}
-        onAccept={handleAccept}
-        onReject={handleReject}
+        onAccept={onAccept}
+        onReject={onReject}
       />
     </>
   );

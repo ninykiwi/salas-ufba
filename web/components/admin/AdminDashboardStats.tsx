@@ -2,9 +2,17 @@ import { DoorOpen, ClipboardList, CalendarCheck } from "lucide-react";
 
 interface AdminDashboardStatsProps {
   pendingCount: number;
+  occupancyPercent: number;
+  availableRooms: number;
+  totalRooms: number;
 }
 
-export default function AdminDashboardStats({ pendingCount }: AdminDashboardStatsProps) {
+export default function AdminDashboardStats({
+  pendingCount,
+  occupancyPercent,
+  availableRooms,
+  totalRooms,
+}: AdminDashboardStatsProps) {
   return (
     <>
       {/* Ocupação Atual */}
@@ -17,12 +25,11 @@ export default function AdminDashboardStats({ pendingCount }: AdminDashboardStat
             <DoorOpen className="text-[#000666]" size={20} />
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-5xl font-bold text-[#000666]">72%</span>
-            <span className="text-sm font-semibold text-[#00a8e8]">+5% vs ontem</span>
+            <span className="text-5xl font-bold text-[#000666]">{occupancyPercent}%</span>
           </div>
         </div>
         <div className="w-full bg-gray-100 h-2 rounded-full mt-6 overflow-hidden">
-          <div className="bg-[#000666] h-full" style={{ width: "72%" }}></div>
+          <div className="bg-[#000666] h-full" style={{ width: `${occupancyPercent}%` }}></div>
         </div>
       </div>
 
@@ -40,9 +47,6 @@ export default function AdminDashboardStats({ pendingCount }: AdminDashboardStat
             <span className="text-sm text-gray-500">solicitações</span>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-6">
-          Urgência: <span className="text-[#d90000] font-bold">Alta</span>
-        </p>
       </div>
 
       {/* Salas Disponíveis */}
@@ -55,11 +59,10 @@ export default function AdminDashboardStats({ pendingCount }: AdminDashboardStat
             <CalendarCheck className="text-[#0074d9]" size={20} />
           </div>
           <div className="flex items-baseline space-x-2">
-            <span className="text-5xl font-bold text-[#000666]">08</span>
-            <span className="text-sm text-gray-500">de 32 totais</span>
+            <span className="text-5xl font-bold text-[#000666]">{availableRooms}</span>
+            <span className="text-sm text-gray-500">de {totalRooms} totais</span>
           </div>
         </div>
-        <p className="text-sm text-gray-500 mt-6">Bloco A e B</p>
       </div>
     </>
   );

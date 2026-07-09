@@ -98,14 +98,9 @@ export default function RoomCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm text-gray-400 pt-2 border-t border-gray-100">
-        <div className="flex items-center gap-1">
-          <Users size={14} />
-          <span>{capacity} Pessoas</span>
-        </div>
-        <button className="text-[#000666] font-semibold text-sm cursor-pointer">
-          Ver Horários
-        </button>
+      <div className="flex items-center gap-1 text-sm text-gray-400 pt-2 border-t border-gray-100">
+        <Users size={14} />
+        <span>{capacity} Pessoas</span>
       </div>
     </div>
   );

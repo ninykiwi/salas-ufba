@@ -19,13 +19,15 @@ interface NextEvent {
   time: string;
 }
 
-interface AdminRoomCardProps {
+interface ProfRoomCardProps {
+  roomId: string;
+  instituteId: string;
   name: string;
   status: Status;
   currentEvent?: CurrentEvent;
   nextEvent?: NextEvent;
   capacity: number;
-  freeUntil?: string; 
+  freeUntil?: string;
 }
 
 const currentEventStyles: Record< "OCUPADA" | "EM_REUNIAO", { wrapper: string; label: string; labelText: string; titleColor: string; borderColor: string } > = {
@@ -45,16 +47,18 @@ const currentEventStyles: Record< "OCUPADA" | "EM_REUNIAO", { wrapper: string; l
   },
 };
 
-export default function AdminRoomCard({
+export default function ProfRoomCard({
+  roomId,
+  instituteId,
   name,
   status,
   currentEvent,
   nextEvent,
   capacity,
   freeUntil,
-}: AdminRoomCardProps) {
+}: ProfRoomCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const isOccupied = status === "OCUPADA" || status === "EM_REUNIAO";
   const eventStyle = isOccupied ? currentEventStyles[status] : null;
 
@@ -109,45 +113,37 @@ export default function AdminRoomCard({
         {/* Rodapé unificado */}
         <div className="mt-auto bg-gray-50 -mx-5 -mb-5 p-4 flex items-center justify-between border-t border-gray-100 text-xs">
           {status === "LIVRE" ? (
-            <>
-							<Link href="/cadastrar-evento">
+            <Link href="/professor/cadastrar-evento">
               <button className="bg-[#000666] text-white px-3 py-2 rounded-lg font-bold text-[10px] uppercase hover:opacity-90 transition-opacity">
                 Solicitar Reserva
               </button>
-							</Link>
-              <button className="text-[#000666] font-bold hover:underline cursor-pointer">
-                Ver Horários
-              </button>
-            </>
+            </Link>
           ) : (
-            <>
-              <div className="flex items-center gap-3 text-gray-500 font-medium">
-                {/* MODIFICAÇÃO: onClick adicionado aqui para abrir o modal */}
-                <button 
-                  onClick={() => setIsModalOpen(true)}
-                  className="flex items-center gap-1 hover:text-[#000666] transition-colors cursor-pointer"
-                >
-                  <ArrowLeftRight size={14} />
-                  <span>Solicitar Troca</span>
-                </button>
-                <div className="flex items-center gap-1">
-                  <Users size={14} />
-                  <span>{capacity} Pessoas</span>
-                </div>
-              </div>
-              <button className="text-[#000666] font-bold hover:underline cursor-pointer">
-                Ver Horários
+            <div className="flex items-center gap-3 text-gray-500 font-medium">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1 hover:text-[#000666] transition-colors cursor-pointer"
+              >
+                <ArrowLeftRight size={14} />
+                <span>Solicitar Troca</span>
               </button>
-            </>
+              <div className="flex items-center gap-1">
+                <Users size={14} />
+                <span>{capacity} Pessoas</span>
+              </div>
+            </div>
           )}
         </div>
       </div>
 
       {/* Renderização condicional do modal fora do fluxo do card */}
-      <ProfSwapRequestModal 
+      <ProfSwapRequestModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        roomId={roomId}
+        instituteId={instituteId}
         roomName={name}
+        roomCapacity={capacity}
         currentEventTitle={currentEvent?.title}
       />
     </>

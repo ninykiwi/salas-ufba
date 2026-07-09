@@ -1,44 +1,56 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, ArrowLeftRight, UserCheck, Calendar, ShieldAlert, ChevronDown } from "lucide-react";
-
-const weekdayOptions = [
-  { value: "2", label: "Segunda-feira" },
-  { value: "3", label: "Terça-feira" },
-  { value: "4", label: "Quarta-feira" },
-  { value: "5", label: "Quinta-feira" },
-  { value: "6", label: "Sexta-feira" },
-];
+import { X, ArrowLeftRight, ChevronDown, AlertTriangle } from "lucide-react";
+import {
+  createSchedule,
+  ApiError,
+  ScheduleCategory,
+  SCHEDULE_CATEGORIES,
+} from "@/lib/api";
 
 interface ProfSwapRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
+  roomId: string;
+  instituteId: string;
   roomName: string;
+  roomCapacity: number;
   currentEventTitle?: string;
 }
-
-type UserRole = "RESPONSAVEL" | "OUTRO_DOCENTE";
-type ProposalType = "PONTUAL" | "RECORRENTE";
 
 export default function ProfSwapRequestModal({
   isOpen,
   onClose,
+  roomId,
+  instituteId,
   roomName,
+  roomCapacity,
   currentEventTitle,
 }: ProfSwapRequestModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  
-  // Estado para saber quem está operando o modal
-  const [userRole, setUserRole] = useState<UserRole>("RESPONSAVEL");
-  
-  // Estado para o tipo de proposta (caso seja "Outro Docente")
-  const [proposalType, setProposalType] = useState<ProposalType>("PONTUAL");
+  const categoryRef = useRef<HTMLDivElement>(null);
 
-  // Estado do dropdown de dia fixo semanal
-  const [weekday, setWeekday] = useState(weekdayOptions[0].value);
-  const [weekdayOpen, setWeekdayOpen] = useState(false);
-  const weekdayRef = useRef<HTMLDivElement>(null);
+  const [category, setCategory] = useState<ScheduleCategory>("aula_regular");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [expectedAudience, setExpectedAudience] = useState("");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setCategory("aula_regular");
+    setDate(new Date().toISOString().split("T")[0]);
+    setStartTime("");
+    setEndTime("");
+    setExpectedAudience("");
+    setNotes("");
+    setError("");
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -47,8 +59,8 @@ export default function ProfSwapRequestModal({
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
         onClose();
       }
-      if (weekdayRef.current && !weekdayRef.current.contains(e.target as Node)) {
-        setWeekdayOpen(false);
+      if (categoryRef.current && !categoryRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false);
       }
     };
 
@@ -66,6 +78,58 @@ export default function ProfSwapRequestModal({
 
   if (!isOpen) return null;
 
+  const audienceNumber = Number(expectedAudience);
+  const audienceExceedsCapacity =
+    !!expectedAudience && Number.isInteger(audienceNumber) && audienceNumber > roomCapacity;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (
+      !date ||
+      !startTime ||
+      !endTime ||
+      !expectedAudience ||
+      !Number.isInteger(audienceNumber) ||
+      audienceNumber < 1 ||
+      audienceExceedsCapacity ||
+      !notes.trim()
+    ) {
+      setError("Preencha todos os campos corretamente antes de enviar.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const context = currentEventTitle
+        ? `Sala ocupada atualmente por: "${currentEventTitle}". `
+        : "";
+      await createSchedule({
+        title: `Solicitação de troca — ${roomName}`,
+        category,
+        room_id: roomId,
+        institute_id: instituteId,
+        date,
+        start_time: startTime,
+        end_time: endTime,
+        expected_audience: audienceNumber,
+        recurrence: "unico",
+        notes: `[TROCA] ${context}${notes.trim()}`,
+      });
+      alert("Solicitação de troca enviada para o administrador do instituto.");
+      onClose();
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+        setError("Sua sessão expirou. Faça login novamente.");
+      } else {
+        setError(err instanceof Error ? err.message : "Não foi possível enviar a solicitação.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
       <div
@@ -75,9 +139,9 @@ export default function ProfSwapRequestModal({
         {/* Cabeçalho */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
           <div className="flex items-center gap-2 text-[#000666]">
-            {userRole === "RESPONSAVEL" ? <ArrowLeftRight size={18} /> : <UserCheck size={18} />}
+            <ArrowLeftRight size={18} />
             <h3 className="font-bold text-sm uppercase tracking-wide">
-              Solicitação de Espaço — {roomName}
+              Solicitar Troca — {roomName}
             </h3>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-1">
@@ -85,172 +149,132 @@ export default function ProfSwapRequestModal({
           </button>
         </div>
 
-        {/* ABA PRINCIPAL: Quem é você em relação a esta sala? */}
-        <div className="grid grid-cols-2 border-b border-gray-200 bg-gray-100/50 p-1.5 gap-1 text-center text-xs">
-          <button
-            type="button"
-            onClick={() => setUserRole("RESPONSAVEL")}
-            className={`py-2 font-bold rounded-lg transition-colors ${
-              userRole === "RESPONSAVEL" ? "bg-white text-[#000666] shadow-sm" : "text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            Sou o responsável atual por esta sala
-          </button>
-          <button
-            type="button"
-            onClick={() => setUserRole("OUTRO_DOCENTE")}
-            className={`py-2 font-bold rounded-lg transition-colors ${
-              userRole === "OUTRO_DOCENTE" ? "bg-white text-[#000666] shadow-sm" : "text-gray-500 hover:bg-gray-100"
-            }`}
-          >
-            Quero pedir esta sala emprestada
-          </button>
-        </div>
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
+            Esta sala está ocupada{currentEventTitle ? ` por "${currentEventTitle}"` : ""}. Sua
+            solicitação será enviada como um novo pedido de reserva desta sala, para aprovação do
+            administrador do instituto.
+          </div>
 
-        {/* Formulário Dinâmico */}
-        <div className="p-6 flex flex-col gap-4">
-          
-          {/* FLUXO 1: SOU O RESPONSÁVEL DA SALA (Direto para o Admin) */}
-          {userRole === "RESPONSAVEL" && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert("Solicitação de troca permanente enviada direto para a aprovação do Administrador.");
-                onClose();
-              }}
-              className="flex flex-col gap-4 animate-fade-in"
-            >
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
-                Esta ação enviará um pedido de permuta diretamente para a <strong>Administração do Sistema</strong> para realocar permanentemente sua atividade.
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
-                  Sua Sala Desejada (Alvo da Troca)
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Pavilhão II - Sala 204"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
-                  Justificativa para a Coordenação / Admin
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="Explique o motivo técnico/didático da necessidade de troca definitiva..."
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none resize-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
-                <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-[#000666] text-white rounded-lg text-xs font-semibold uppercase hover:opacity-90">Enviar ao Admin</button>
-              </div>
-            </form>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-xs font-semibold flex items-start gap-2">
+              <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
           )}
 
-          {/* FLUXO 2: SOU OUTRO DOCENTE (Proposta Direta para o Responsável Atual) */}
-          {userRole === "OUTRO_DOCENTE" && (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert(`Proposta de uso [${proposalType}] enviada diretamente ao docente responsável atual.`);
-                onClose();
-              }}
-              className="flex flex-col gap-4 animate-fade-in"
-            >
-              {/* Sub-Abas para escolher Tipo de Proposta */}
-              <div className="flex bg-gray-100 p-1 rounded-lg gap-1 text-center text-xs">
-                <button
-                  type="button"
-                  onClick={() => setProposalType("PONTUAL")}
-                  className={`flex-1 py-1.5 font-semibold rounded-md transition-colors ${proposalType === "PONTUAL" ? "bg-[#000666] text-white" : "text-gray-600 hover:bg-gray-200"}`}
-                >
-                  Uso Exclusivo (1 Dia)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setProposalType("RECORRENTE")}
-                  className={`flex-1 py-1.5 font-semibold rounded-md transition-colors ${proposalType === "RECORRENTE" ? "bg-[#000666] text-white" : "text-gray-600 hover:bg-200"}`}
-                >
-                  Uso Semanal (Toda semana)
-                </button>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900 leading-relaxed">
-                <strong>📍 Destinatário:</strong> Esta proposta irá para o painel do professor responsável por <span className="italic">"{currentEventTitle || "este horário"}"</span>. Se ele aceitar no sistema, o espaço será temporariamente liberado para você.
-              </div>
-
-              {proposalType === "PONTUAL" ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Data Desejada</label>
-                    <input type="date" required className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Horário do Turno</label>
-                    <input type="text" required placeholder="Ex: 07:55 — 09:35" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none" />
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Dia Fixo Semanal</label>
-                    <div className="relative" ref={weekdayRef}>
-                      <button
-                        type="button"
-                        onClick={() => setWeekdayOpen((v) => !v)}
-                        className="flex items-center justify-between gap-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white hover:bg-gray-50 focus:border-[#000666] focus:outline-none transition-colors"
-                      >
-                        {weekdayOptions.find((o) => o.value === weekday)?.label}
-                        <ChevronDown size={14} className="text-gray-400" />
-                      </button>
-                      {weekdayOpen && (
-                        <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
-                          {weekdayOptions.map((o) => (
-                            <li
-                              key={o.value}
-                              onClick={() => { setWeekday(o.value); setWeekdayOpen(false); }}
-                              className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                            >
-                              {o.label}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Horário Semanal</label>
-                    <input type="text" required placeholder="Ex: 13:00 às 14:50" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none" />
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Data Desejada</label>
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Público Esperado</label>
+              <input
+                type="number"
+                required
+                min={1}
+                placeholder={`Máx. ${roomCapacity}`}
+                value={expectedAudience}
+                onChange={(e) => setExpectedAudience(e.target.value)}
+                className={`w-full border rounded-lg px-3 py-2 text-sm text-gray-800 focus:outline-none ${
+                  audienceExceedsCapacity ? "border-red-500" : "border-gray-200 focus:border-[#000666]"
+                }`}
+              />
+              {audienceExceedsCapacity && (
+                <p className="text-[11px] text-red-500 font-semibold mt-1">
+                  Acima da capacidade da sala ({roomCapacity}).
+                </p>
               )}
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Mensagem Cordial ao Professor</label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="Escreva uma mensagem explicando seu caso (ex: 'Prezado colega, preciso aplicar uma avaliação que exige os computadores deste laboratório...')"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none resize-none"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Início</label>
+              <input
+                type="time"
+                required
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Fim</label>
+              <input
+                type="time"
+                required
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none"
+              />
+            </div>
+          </div>
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
-                <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-[#000666] text-white rounded-lg text-xs font-semibold uppercase hover:opacity-90">Enviar Proposta</button>
-              </div>
-            </form>
-          )}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Categoria</label>
+            <div className="relative" ref={categoryRef}>
+              <button
+                type="button"
+                onClick={() => setCategoryOpen((v) => !v)}
+                className="flex items-center justify-between gap-2 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white hover:bg-gray-50 focus:border-[#000666] focus:outline-none transition-colors"
+              >
+                {SCHEDULE_CATEGORIES.find((c) => c.value === category)?.label}
+                <ChevronDown size={14} className="text-gray-400" />
+              </button>
+              {categoryOpen && (
+                <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
+                  {SCHEDULE_CATEGORIES.map((c) => (
+                    <li
+                      key={c.value}
+                      onClick={() => { setCategory(c.value); setCategoryOpen(false); }}
+                      className="px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                    >
+                      {c.label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
-        </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Justificativa</label>
+            <textarea
+              required
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Explique o motivo da solicitação de troca..."
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:border-[#000666] focus:outline-none resize-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || audienceExceedsCapacity}
+              className="px-4 py-2 bg-[#000666] text-white rounded-lg text-xs font-semibold uppercase hover:opacity-90 disabled:opacity-50"
+            >
+              {isSubmitting ? "Enviando..." : "Enviar ao Admin"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

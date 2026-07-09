@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { ChevronDown, Building2, Layers, Trash2, Save, X, Loader2 } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -12,7 +12,6 @@ import { getInstitutes, getMap, saveMap, Institute, ApiError } from "@/lib/api";
 
 const MapCanvas = dynamic(() => import("@/components/admin/MapCanvas"), { ssr: false });
 
-const FLOORS = [1, 2, 3];
 const CATEGORIES = Object.keys(categoryLabels) as RoomCategory[];
 const SHAPE_TYPES: { type: ShapeType; label: string }[] = [
   { type: "rect",     label: "Quadrado"  },
@@ -197,6 +196,15 @@ export default function CadastrarMapaPage() {
       .catch(() => setInstitutes([]));
   }, []);
 
+  const floorOptions = useMemo(
+    () => Array.from({ length: Math.max(selectedInstitute?.floors ?? 1, 1) }, (_, i) => i + 1),
+    [selectedInstitute]
+  );
+
+  useEffect(() => {
+    if (selectedFloor > floorOptions.length) setSelectedFloor(1);
+  }, [floorOptions, selectedFloor]);
+
   const loadMap = async (instituteId: string, floor: number) => {
     setIsLoadingMap(true);
     try {
@@ -370,7 +378,7 @@ export default function CadastrarMapaPage() {
               </button>
               {floorOpen && (
                 <ul className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-md z-10">
-                  {FLOORS.map((floor) => (
+                  {floorOptions.map((floor) => (
                     <li
                       key={floor}
                       onClick={() => { tryChangeContext(undefined, floor); setFloorOpen(false); }}

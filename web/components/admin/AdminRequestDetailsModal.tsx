@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { X, Calendar, Clock, FileText, User, HelpCircle, RefreshCw } from "lucide-react";
+import { X, Calendar, Clock, FileText, User, RefreshCw } from "lucide-react";
 import { Solicitacao } from "./AdminRequestsTable"; // ajuste se o caminho for outro
 
 interface AdminRequestDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   request: Solicitacao | null;
-  onAccept: (id: number) => void;
-  onReject: (id: number) => void;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
 }
 
 export default function AdminRequestDetailsModal({
@@ -35,12 +35,11 @@ export default function AdminRequestDetailsModal({
   // Helpers para badges e estilos contextuais
   const typeLabels: Record<string, { text: string; styles: string }> = {
     TROCA: { text: "Solicitação de Troca", styles: "bg-amber-50 text-amber-700 border border-amber-200" },
-    EMPRESTIMO: { text: "Empréstimo Temporário", styles: "bg-blue-50 text-blue-700 border border-blue-200" },
-    NOVA: { text: "Nova Solicitação", styles: "bg-green-50 text-green-700 border border-green-200" },
+    RESERVA: { text: "Nova Solicitação", styles: "bg-green-50 text-green-700 border border-green-200" },
   };
 
-  const reqType = request.tipo || "NOVA";
-  const typeInfo = typeLabels[reqType] || typeLabels.NOVA;
+  const reqType = request.tipo;
+  const typeInfo = typeLabels[reqType] ?? typeLabels.RESERVA;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -67,7 +66,7 @@ export default function AdminRequestDetailsModal({
         <div className="p-6 flex flex-col gap-5 overflow-y-auto max-h-[75vh]">
           
           {/* Seção de Atores: Quem usa vs Quem quer usar */}
-          {reqType === "EMPRESTIMO" || reqType === "TROCA" ? (
+          {reqType === "TROCA" ? (
             <div className="grid grid-cols-2 gap-3 bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs">
               <div className="flex flex-col gap-1 border-r border-gray-200 pr-3">
                 <p className="text-gray-500 font-bold uppercase tracking-wide">Responsável Atual</p>
