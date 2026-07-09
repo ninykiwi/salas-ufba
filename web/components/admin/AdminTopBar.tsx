@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Bell, Info, LogOut } from "lucide-react";
-import NotificationsModal from "./NotificationsModal";
+import { useEffect, useState } from "react";
+import { Info, LogOut } from "lucide-react";
+import NotificationsBell from "@/components/NotificationsBell";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function AdminTopBar() {
     const [time, setTime] = useState("");
     const [dateLabel, setDateLabel] = useState("");
     const { user, logout } = useAuth();
-
-    const [notificationsOpen, setNotificationsOpen] = useState(false);
-    const notificationRef = useRef<HTMLDivElement>(null);
-
-    const [notifications, setNotifications] = useState([
-        { id: 1, professor: "Dr. Carlos Silva", sala: "Pavilhão I - Sala 102", motivo: "Aula prática de Laboratório de Física" },
-        { id: 2, professor: "Dra. Maria Oliveira", sala: "PAF III - Auditório A", motivo: "Seminário de Inteligência Artificial" },
-        { id: 3, professor: "Prof. Ricardo Santos", sala: "Inst. de Matemática - Sala 20", motivo: "Aplicação de prova final" },
-    ]);
 
     useEffect(() => {
         const update = () => {
@@ -30,16 +21,6 @@ export default function AdminTopBar() {
         update();
         const interval = setInterval(update, 1000);
         return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
-                setNotificationsOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     return (
@@ -71,29 +52,7 @@ export default function AdminTopBar() {
                     <p className="text-xs text-gray-700 mt-0.5">{dateLabel}</p>
                 </div>
 
-                {/* Área do Sininho de Notificações */}
-                <div className="relative" ref={notificationRef}>
-                    <button 
-                        onClick={() => setNotificationsOpen(!notificationsOpen)}
-                        className="relative p-1 text-gray-400 hover:text-[#000666] transition-colors focus:outline-none"
-                    >
-                        <Bell size={20} />
-                        
-                        {notifications.length > 0 && (
-                            <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                            </span>
-                        )}
-                    </button>
-
-                    {/* Chamada do Novo Componente Isolado */}
-                    {notificationsOpen && (
-                        <NotificationsModal 
-                            notifications={notifications} 
-                        />
-                    )}
-                </div>
+                <NotificationsBell />
 
                 {/* Ícone Info (Tooltip ao passar o mouse) */}
                 <div className="relative group flex items-center justify-center">

@@ -20,6 +20,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 interface AuthenticatedRequest {
   user: AuthenticatedUser;
+  headers: { authorization?: string };
 }
 
 @Controller('schedules')
@@ -57,7 +58,11 @@ export class SchedulesController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateScheduleDto, @Req() req: AuthenticatedRequest) {
-    return this.schedulesService.create(dto, req.user);
+    return this.schedulesService.create(
+      dto,
+      req.user,
+      req.headers.authorization,
+    );
   }
 
   @Patch(':id')

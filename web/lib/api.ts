@@ -417,6 +417,49 @@ export async function deleteSchedule(id: string): Promise<void> {
   return handleResponse<void>(response);
 }
 
+export type NotificationType =
+  | "nova_solicitacao"
+  | "solicitacao_aprovada"
+  | "solicitacao_recusada";
+
+export interface AppNotification {
+  _id: string;
+  user_id: string;
+  institute_id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  schedule_id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getNotifications(): Promise<AppNotification[]> {
+  const response = await fetch("/api/notifications", {
+    credentials: "include",
+  });
+  return handleResponse<AppNotification[]>(response);
+}
+
+export async function markNotificationRead(
+  id: string
+): Promise<AppNotification> {
+  const response = await fetch(`/api/notifications/${id}/read`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return handleResponse<AppNotification>(response);
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const response = await fetch("/api/notifications", {
+    method: "PATCH",
+    credentials: "include",
+  });
+  return handleResponse<void>(response);
+}
+
 export interface AuditLog {
   id: string;
   admin_id: string;

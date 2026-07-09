@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   Request,
   ForbiddenException,
@@ -23,8 +24,20 @@ export class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get()
-  async findAll(@Request() req) {
+  async findAll(
+    @Request() req,
+    @Query('institute_id') institute_id?: string,
+    @Query('role') role?: Role,
+  ) {
     const requester = req.user;
+
+    // Consulta pontual usada pelo rooms-service (com o token do próprio
+    // professor) para notificar os admins de um instituto ao criar uma
+    // solicitação — não é a listagem geral de usuários, por isso não é
+    // bloqueada para PROFESSOR.
+    if (institute_id && role) {
+      return this.usersService.findByInstituteAndRole(institute_id, role);
+    }
 
     // 1. PROFESSOR não tem permissão para listar usuários
     if (requester.role === Role.PROFESSOR) {

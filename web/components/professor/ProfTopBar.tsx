@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Info, Bell, LogOut } from "lucide-react";
+import { Info, LogOut } from "lucide-react";
+import NotificationsBell from "@/components/NotificationsBell";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function ProfTopBar() {
@@ -43,9 +44,7 @@ export default function ProfTopBar() {
                     <p className="text-xs text-gray-700 mt-0.5">{dateLabel}</p>
                 </div>
 
-                <button className="text-gray-400 hover:text-[#000666] transition-colors focus:outline-none">
-                    <Bell size={20} />
-                </button>
+                <NotificationsBell />
 
                 {/* Ícone Info (Tooltip ao passar o mouse) */}
                 <div className="relative group flex items-center justify-center">

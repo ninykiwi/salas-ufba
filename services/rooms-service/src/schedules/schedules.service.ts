@@ -14,17 +14,25 @@ import { generateOccurrenceDates } from './utils/recurrence';
 import { todayInBahia } from './utils/today';
 import { AuthenticatedUser } from '../auth/jwt.strategy';
 import { RoomsService } from '../rooms/rooms.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const MAX_OCCURRENCES = 60;
+const AUTH_SERVICE_URL =
+  process.env.AUTH_SERVICE_URL || 'http://auth-service:3002';
 
 @Injectable()
 export class SchedulesService {
   constructor(
     @InjectModel(Schedule.name) private scheduleModel: Model<ScheduleDocument>,
     private roomsService: RoomsService,
+    private notificationsService: NotificationsService,
   ) {}
 
-  async create(dto: CreateScheduleDto, user: AuthenticatedUser) {
+  async create(
+    dto: CreateScheduleDto,
+    user: AuthenticatedUser,
+    authorizationHeader?: string,
+  ) {
     const room = await this.roomsService.findOne(dto.room_id);
     if (dto.expected_audience > room.capacity) {
       throw new BadRequestException(
@@ -42,6 +50,7 @@ export class SchedulesService {
 
     if (rest.recurrence === 'unico') {
       const created = await this.scheduleModel.create(base);
+      await this.notifyAdmins(created, room.name, authorizationHeader);
       return [created];
     }
 
@@ -67,7 +76,60 @@ export class SchedulesService {
 
     const recurrence_group_id = randomUUID();
     const docs = dates.map((date) => ({ ...base, date, recurrence_group_id }));
-    return this.scheduleModel.insertMany(docs);
+    const created = await this.scheduleModel.insertMany(docs);
+    await this.notifyAdmins(created[0], room.name, authorizationHeader);
+    return created;
+  }
+
+  private async notifyAdmins(
+    schedule: Pick<Schedule, 'institute_id' | 'professor_name' | 'date'> & {
+      _id: unknown;
+    },
+    roomName: string,
+    authorizationHeader?: string,
+  ): Promise<void> {
+    if (!authorizationHeader) return;
+    try {
+      const response = await fetch(
+        `${AUTH_SERVICE_URL}/users?institute_id=${schedule.institute_id}&role=ADMIN`,
+        { headers: { Authorization: authorizationHeader } },
+      );
+      if (!response.ok) return;
+      const admins: { id: string }[] = await response.json();
+      await Promise.all(
+        admins.map((admin) =>
+          this.notificationsService.create({
+            user_id: admin.id,
+            institute_id: schedule.institute_id,
+            type: 'nova_solicitacao',
+            title: 'Nova Solicitação de Reserva',
+            message: `${schedule.professor_name} solicitou reserva de ${roomName} em ${schedule.date}`,
+            schedule_id: String(schedule._id),
+          }),
+        ),
+      );
+    } catch {
+      // Falha ao notificar admins não deve impedir a criação da solicitação.
+    }
+  }
+
+  private async notifyProfessor(schedule: ScheduleDocument): Promise<void> {
+    try {
+      const room = await this.roomsService.findOne(schedule.room_id);
+      const approved = schedule.status === 'confirmado';
+      await this.notificationsService.create({
+        user_id: schedule.professor_id,
+        institute_id: schedule.institute_id,
+        type: approved ? 'solicitacao_aprovada' : 'solicitacao_recusada',
+        title: approved ? 'Solicitação Aprovada' : 'Solicitação Recusada',
+        message: `Sua reserva de ${room.name} em ${schedule.date} foi ${
+          approved ? 'aprovada' : 'recusada'
+        }`,
+        schedule_id: String(schedule._id),
+      });
+    } catch {
+      // Falha ao notificar o professor não deve impedir a atualização do agendamento.
+    }
   }
 
   findAll(filters: {
@@ -106,6 +168,7 @@ export class SchedulesService {
   async update(id: string, dto: UpdateScheduleDto, user: AuthenticatedUser) {
     const schedule = await this.findOne(id);
     this.assertCanModify(schedule, user);
+    const previousStatus = schedule.status;
     // dto pode ter chaves declaradas na classe com valor `undefined` (não
     // enviadas no body) — só aplicamos as que realmente vieram preenchidas,
     // senão Object.assign apagaria campos obrigatórios do documento.
@@ -124,7 +187,17 @@ export class SchedulesService {
       }
     }
 
-    return schedule.save();
+    const saved = await schedule.save();
+
+    if (
+      dto.status &&
+      dto.status !== previousStatus &&
+      (dto.status === 'confirmado' || dto.status === 'cancelado')
+    ) {
+      await this.notifyProfessor(saved);
+    }
+
+    return saved;
   }
 
   async remove(id: string, user: AuthenticatedUser): Promise<void> {

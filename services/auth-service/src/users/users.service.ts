@@ -152,6 +152,19 @@ export class UsersService {
     });
   }
 
+  async findByInstituteAndRole(
+    instituteId: string,
+    role: Role,
+  ): Promise<{ id: string; name: string; email: string }[]> {
+    return this.prisma.user.findMany({
+      where: {
+        role,
+        institutes: { some: { id: instituteId } },
+      },
+      select: { id: true, name: true, email: true },
+    });
+  }
+
   async update(
     id: string,
     data: {

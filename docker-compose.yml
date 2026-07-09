@@ -76,6 +76,7 @@ services:
       MONGODB_URI: mongodb://mongo:27017/db_rooms
       JWT_SECRET: ${JWT_SECRET}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
     depends_on:
       mongo:
         condition: service_healthy

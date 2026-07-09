@@ -1,64 +1,101 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ViewHeader from "@/components/view/ViewHeader";
 import ViewFooter from "@/components/view/ViewFooter";
 import ViewRoomCard from "@/components/view/ViewRoomCard";
+import { getInstitutes, getRooms, getSchedulesToday, Institute, Room, Schedule } from "@/lib/api";
+import { computeRoomOccupancy, RoomOccupancyStatus } from "@/lib/roomOccupancy";
 
-type RoomStatus = "OCUPADA" | "LIVRE" | "EM_REUNIAO";
+const ROOMS_PER_PAGE = 6;
+const REFRESH_INTERVAL_MS = 60_000;
 
-interface Room {
-  id: number;
+interface ViewRoom {
+  id: string;
   name: string;
-  status: RoomStatus;
+  status: RoomOccupancyStatus;
   currentEvent?: { title: string; professor?: string; startTime: string; endTime: string };
   freeLabel?: string;
 }
 
-const allRooms: Room[][] = [
-  [
-    { id: 1, name: "Sala 101", status: "OCUPADA", currentEvent: { title: "Cálculo Diferencial e Integral I", professor: "Prof. Ricardo Almeida", startTime: "13:00", endTime: "15:50" } },
-    { id: 2, name: "Sala 102", status: "LIVRE", freeLabel: "Livre para Estudo" },
-    { id: 3, name: "Sala 105", status: "OCUPADA", currentEvent: { title: "Arquitetura de Computadores", professor: "Profª. Mariana Souza", startTime: "15:00", endTime: "16:50" } },
-    { id: 4, name: "Auditório A", status: "OCUPADA", currentEvent: { title: "Workshop: IA Generativa", professor: "Lab de Inovação Digital", startTime: "14:00", endTime: "18:00" } },
-    { id: 5, name: "Lab 203", status: "LIVRE", freeLabel: "Lab Disponível" },
-    { id: 6, name: "Sala 208", status: "OCUPADA", currentEvent: { title: "Redes de Computadores I", professor: "Prof. Carlos Eduardo", startTime: "15:30", endTime: "17:20" } },
-  ],
-  [
-    { id: 7, name: "Sala 301", status: "LIVRE", freeLabel: "Livre para Estudo" },
-    { id: 8, name: "Sala 302", status: "OCUPADA", currentEvent: { title: "Banco de Dados I", professor: "Prof. André Lima", startTime: "14:00", endTime: "15:50" } },
-    { id: 9, name: "Sala 303", status: "OCUPADA", currentEvent: { title: "Engenharia de Software", professor: "Profª. Carla Matos", startTime: "13:00", endTime: "14:50" } },
-    { id: 10, name: "Lab 304", status: "LIVRE", freeLabel: "Lab Disponível" },
-    { id: 11, name: "Sala 305", status: "OCUPADA", currentEvent: { title: "Sistemas Operacionais", professor: "Prof. Bruno Ferreira", startTime: "15:00", endTime: "16:50" } },
-    { id: 12, name: "Sala 306", status: "LIVRE", freeLabel: "Livre para Estudo" },
-  ],
-];
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks.length > 0 ? chunks : [[]];
+}
 
 export default function ViewPage() {
+  const [institute, setInstitute] = useState<Institute | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [todaySchedules, setTodaySchedules] = useState<Schedule[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const handleNext = useCallback(() => {
-    setCurrentPage((prev) => (prev + 1) % allRooms.length);
+  useEffect(() => {
+    getInstitutes()
+      .then((data) => setInstitute(data[0] ?? null))
+      .catch(() => setInstitute(null));
   }, []);
 
-  const rooms = allRooms[currentPage];
+  const loadOccupancy = useCallback(async (instituteId: string) => {
+    const [roomsData, schedulesData] = await Promise.all([
+      getRooms({ institute_id: instituteId, status: "ativa" }),
+      getSchedulesToday(instituteId),
+    ]);
+    setRooms(roomsData);
+    setTodaySchedules(schedulesData);
+  }, []);
+
+  useEffect(() => {
+    if (!institute) return;
+
+    loadOccupancy(institute.id);
+    const interval = setInterval(() => loadOccupancy(institute.id), REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [institute, loadOccupancy]);
+
+  const viewRooms: ViewRoom[] = rooms.map((room) => {
+    const occupancy = computeRoomOccupancy(room, todaySchedules);
+    return {
+      id: room._id,
+      name: room.name,
+      status: occupancy.status,
+      currentEvent: occupancy.currentEvent,
+      freeLabel: occupancy.status === "LIVRE" ? "Livre para Estudo" : undefined,
+    };
+  });
+
+  const pages = chunk(viewRooms, ROOMS_PER_PAGE);
+
+  const handleNext = useCallback(() => {
+    setCurrentPage((prev) => (prev + 1) % pages.length);
+  }, [pages.length]);
+
+  // Se a lista de páginas encolher (menos salas), volta pra primeira em vez de
+  // ficar presa numa página que deixou de existir.
+  useEffect(() => {
+    if (currentPage >= pages.length) setCurrentPage(0);
+  }, [currentPage, pages.length]);
+
+  const currentRooms = pages[currentPage] ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col px-8 py-6 gap-6">
       <ViewHeader
-        institute="Instituto de Computação"
+        institute={institute?.name ?? "Carregando..."}
         location="Campus Federação — Pavilhão de Aulas (PAF 2)"
       />
 
       <div className="grid grid-cols-3 gap-4 flex-1">
-        {rooms.map((room) => (
+        {currentRooms.map((room) => (
           <ViewRoomCard key={room.id} {...room} />
         ))}
       </div>
 
       <ViewFooter
         currentPage={currentPage}
-        totalPages={allRooms.length}
+        totalPages={pages.length}
         onNext={handleNext}
       />
     </div>
